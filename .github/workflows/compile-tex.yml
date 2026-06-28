@@ -1,0 +1,29 @@
+name: Compile paper
+
+on:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  build-paper:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile LaTeX source
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: paper/ActiveVisionBenchmark.tex
+          latexmk_use_lualatex: false
+          work_in_root_file_dir: true
+          args: -pdf -bibtex -interaction=nonstopmode -file-line-error
+
+      - name: Commit compiled PDF
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update compiled paper PDF [skip ci]"
+          file_pattern: paper/ActiveVisionBenchmark.pdf
