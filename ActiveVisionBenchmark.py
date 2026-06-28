@@ -2,29 +2,19 @@
 ActiveVisionBenchmark
 =====================
 
-A lightweight, single-file benchmarking toolkit for **active vision** systems.
+A lightweight, single-file toolkit centered on creating controlled visual
+stimuli, including oriented visual-flow stimuli for active-vision experiments.
 
-Active vision refers to perception systems that actively control where they
-direct their gaze or attention to optimally gather information from a scene.
+The core stimulus target is the visual-flow orientation setup described in:
+https://laurentperrinet.github.io/sciblog/posts/2025-04-24-orienting-yourself-in-the-visual-flow.html
+
 This library provides:
 
-* Stimulus generation (noise fields, Gabor patches, search arrays).
-* A task abstraction for visual-search and detection experiments.
-* A pluggable :class:`ActiveVisionModel` interface for custom algorithms.
-* A :class:`Benchmark` engine that runs models on tasks and records results.
-* Standard metrics: search efficiency, area-under-ROC, scanpath length, etc.
+* Low-level stimulus generators (noise fields, Gabor patches).
+* A visual-flow stimulus constructor with oriented local elements.
+* Optional benchmark/task utilities for model comparison workflows.
 
 Dependencies: numpy (required), scipy and matplotlib (optional).
-
-Example
--------
->>> import numpy as np
->>> from ActiveVisionBenchmark import Benchmark, RandomSearchModel, VisualSearchTask
->>> task = VisualSearchTask(image_size=(64, 64), n_distractors=8, seed=0)
->>> model = RandomSearchModel(seed=42)
->>> bench = Benchmark(max_fixations=20)
->>> result = bench.run(model, task)
->>> print(result.summary())
 """
 
 from __future__ import annotations
@@ -206,6 +196,93 @@ def make_search_array(
         _paste(canvas, target, target_location)
 
     return canvas, target_location
+
+
+def make_visual_flow_stimulus(
+    size: Tuple[int, int] = (256, 256),
+    n_elements: int = 128,
+    focus_of_expansion: Tuple[float, float] = (0.0, 0.0),
+    orientation_offset: float = np.pi / 2,
+    element_length_sigma: float = 4.0,
+    element_width_sigma: float = 1.2,
+    contrast: float = 0.35,
+    background_mean: float = 0.5,
+    background_std: float = 0.03,
+    seed: Optional[int] = None,
+) -> np.ndarray:
+    """Create an oriented visual-flow stimulus image in [0, 1].
+
+    The generated pattern follows a radial optic-flow field. Each local element
+    is an anisotropic Gaussian "stroke" whose orientation is tied to the local
+    flow direction plus ``orientation_offset``. By default, this produces
+    orientations orthogonal to flow direction.
+
+    Parameters
+    ----------
+    size:
+        ``(height, width)`` of the stimulus image.
+    n_elements:
+        Number of local oriented elements drawn onto the image.
+    focus_of_expansion:
+        ``(row, col)`` offset of the flow origin, in pixels, relative to the
+        image center.
+    orientation_offset:
+        Angular offset (radians) added to local flow direction.
+    element_length_sigma:
+        Standard deviation of the element's long axis (pixels).
+    element_width_sigma:
+        Standard deviation of the element's short axis (pixels).
+    contrast:
+        Amplitude scaling of each element contribution.
+    background_mean:
+        Mean luminance of the background.
+    background_std:
+        Standard deviation of the Gaussian-noise background.
+    seed:
+        Random seed for reproducibility.
+    """
+    rng = _rng(seed)
+    h, w = size
+    canvas = make_gaussian_noise(
+        size=size,
+        mean=background_mean,
+        std=background_std,
+        seed=int(rng.integers(1 << 31)),
+    )
+
+    yy = np.arange(h)[:, None]
+    xx = np.arange(w)[None, :]
+    centre_row = h / 2 + float(focus_of_expansion[0])
+    centre_col = w / 2 + float(focus_of_expansion[1])
+
+    min_margin = int(max(4 * element_length_sigma, 2))
+    if h <= 2 * min_margin or w <= 2 * min_margin:
+        raise ValueError("size is too small for requested element_length_sigma")
+
+    for _ in range(n_elements):
+        row = float(rng.integers(min_margin, h - min_margin))
+        col = float(rng.integers(min_margin, w - min_margin))
+
+        flow_angle = float(np.arctan2(row - centre_row, col - centre_col))
+        theta = flow_angle + orientation_offset
+        ct, st = np.cos(theta), np.sin(theta)
+
+        x_rel = xx - col
+        y_rel = yy - row
+        x_rot = x_rel * ct + y_rel * st
+        y_rot = -x_rel * st + y_rel * ct
+
+        element = np.exp(
+            -0.5
+            * (
+                (x_rot / max(element_length_sigma, 1e-6)) ** 2
+                + (y_rot / max(element_width_sigma, 1e-6)) ** 2
+            )
+        )
+        polarity = 1.0 if rng.random() > 0.5 else -1.0
+        canvas += polarity * contrast * element
+
+    return np.clip(canvas, 0.0, 1.0)
 
 
 # ---------------------------------------------------------------------------

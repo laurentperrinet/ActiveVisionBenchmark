@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ActiveVisionBenchmark"
 version = "0.1.0"
-description = "A lightweight, single-file benchmarking toolkit for active vision systems"
+description = "A lightweight, single-file toolkit for visual-flow stimulus construction in active vision"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Laurent Perrinet", email = "laurent.perrinet@univ-amu.fr" }]
-keywords = ["active vision", "visual search", "saccades", "benchmark", "foveation"]
+keywords = ["active vision", "visual stimulus", "visual flow", "optic flow", "orientation"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",

@@ -9,7 +9,7 @@
 \usepackage{paralist}
 \usepackage{lineno}
 
-\title{Your Title}
+\title{ActiveVisionBenchmark: Stimulus Construction for Visual-Flow Orientation Experiments}
 \author{Laurent Perrinet}
 \affiliation{CNRS}
 \date{\today}
@@ -19,42 +19,42 @@
 \maketitle
 
 \section*{Introduction}
-Advances in vision science, whether in the study of behavior, neural activity, or computational modeling, are closely tied to the \textbf{visual stimuli} used in experimental contexts. In neurophysiology, for example, the earliest demonstrations of the \textbf{retinotopic organization} of the primary visual cortex (V1) were achieved using \textbf{circular light spots}. The work of \citet{Talbot1941} established a \textbf{topographic map} of V1 by employing localized light points, confirming that neurons responding to adjacent regions of the visual field are organized contiguously within the cortex.
+ActiveVisionBenchmark is a compact Python library whose primary purpose is to
+construct visual stimuli, with a specific emphasis on oriented visual-flow
+patterns.
 
-These findings were later extended by \citet{Barlow1953}, who introduced \textbf{dynamic stimuli}, such as \textbf{sequential light flashes} or \textbf{moving bars}, to investigate mechanisms of \textbf{directional selectivity} and \textbf{spatial summation} in the retina and visual cortex. His experiments, conducted in the 1950s, notably revealed the importance of \textbf{center-surround antagonistic receptive fields} and \textbf{motion detection mechanisms} in rabbits and cats.
+The reference stimulus design is documented in:
+\href{https://laurentperrinet.github.io/sciblog/posts/2025-04-24-orienting-yourself-in-the-visual-flow.html}{Orienting yourself in the visual flow}.
 
-A major turning point in understanding cortical processing of visual information occurred in 1958, when \citet{Hubel1959} conducted experiments on the visual cortex of cats at Johns Hopkins University. Initially, they used \textbf{circular light spots} as stimuli but obtained no clear or specific neuronal responses. However, a \textbf{serendipitous discovery} changed the course of their research: while moving a \textbf{glass slide} (or a transparency) in front of the stimulation screen, they observed that V1 neurons responded \textbf{vigorously} when the \textbf{straight edge} of the slide crossed their receptive field. This accidental observation led them to systematically test \textbf{oriented light bars}, which revealed the existence of \textbf{simple cells} (sensitive to the orientation and position of edges) and \textbf{complex cells} (sensitive to the movement of edges) in V1. Without this fortuitous discovery, they might have continued using punctate stimuli, as their predecessors did, and would not have identified the importance of \textbf{orientation} and \textbf{spatial structure} in cortical visual processing as rapidly.
+Rather than positioning the project mainly as a benchmark suite, the library is
+now centered on reproducible stimulus creation for experimental pipelines in
+behavioral, neurophysiological, and computational vision studies.
 
-\medskip
-In the current era, where neuronal recording techniques have made phenomenal progress, it is \textbf{essential} to consider what constitutes \textbf{optimal visual stimulation} for characterizing the visual system. It is striking that most experiments still employ the \textbf{same types of stimuli} as those used in the pioneering studies mentioned above: \textbf{light spots, flashes, or oriented bars}. Indeed, these stimuli remain \textbf{indispensable} because they allow \textbf{direct comparisons} between current results and historical data, while offering \textbf{precise control} over experimental variables.
-
-Recently, some studies have introduced \textbf{more ecological stimuli}, such as \textbf{natural images} or \textbf{videos}. However, these approaches have a \textbf{major drawback}: their complexity makes it difficult to \textbf{finitely interpret} neuronal responses in terms of \textbf{low-level features}, such as the presence of \textbf{locally oriented edges} or \textbf{elementary motions}. To overcome this limitation, many studies now adopt an \textbf{intermediate strategy}, designing \textbf{parametric stimuli} that approximate \textbf{natural conditions} while remaining \textbf{controllable} through ecologically relevant parameters, such as \textbf{orientation}, \textbf{direction of motion}, or \textbf{texture} of the presented objects.
-
-\medskip
-Despite these advances, the stimuli used often remain \textbf{overly simplistic} compared to the \textbf{complexity of natural environments} that the visual system encounters. Two major limitations persist:
-
-\begin{compactitem}
-    \item \textbf{The three-dimensional nature of the visual world}: The visual system enables an agent to \textbf{navigate} in a three-dimensional environment. In this regard, certain brain areas, such as the \textbf{Medial Superior Temporal area (MST)} in primates, contain neurons that \textbf{explicitly encode} \textbf{prototypical optic flows}, corresponding to the agent's movements in a static visual world (e.g., expansion or rotation of the visual field).
-
-    \item \textbf{Agent-environment interaction}: The visual system does not operate in isolation but within an \textbf{active agent} capable of acting on its environment. A visual stimulation system must therefore be \textbf{modifiable in real time} to create a \textbf{closed sensorimotor loop} that reflects the \textbf{natural functioning} of the visual system. Although such systems exist, their use remains \textbf{limited}, due to the \textbf{technical complexity} involved.
-\end{compactitem}
-
-In this context, we propose a \textbf{library} designed to extend \textbf{existing visual simulators}, adapting them to both \textbf{simple and ecological tasks}. Our objectives are threefold:
-
+\section*{Stimulus definition}
+The implemented stimulus is based on three principles:
 \begin{compactenum}
-    \item \textbf{Extending stimulation scenarios}: Our library allows the projection of existing stimuli into \textbf{three typical scenarios}:
-    \begin{compactitem}
-        \item \textbf{Navigation relative to an infinite plane}, simulating, for example, movement over a textured surface.
-        \item \textbf{Navigation within a cylinder}, reproducing a confined environment.
-    \end{compactitem}
-
-    \item \textbf{Dynamic stimulus generation}: Stimuli can be \textbf{pre-generated} before the experiment or \textbf{modified in real time}, allowing parameters (such as orientation, speed, or texture) to be adjusted \textbf{during the experiment}.
-
-    \item \textbf{Simplicity and integration}: Our goal is to provide a library that is \textbf{easy to use}, in the form of a \textbf{single Python file}, so that it can be \textbf{easily integrated} into existing libraries that control the experimental workflow.
+    \item A visual-flow field defines local motion direction around a configurable focus of expansion.
+    \item Local oriented elements are generated from that flow direction, with a configurable angular offset.
+    \item The final stimulus is composited on a controlled-noise background with explicit random seeds for reproducibility.
 \end{compactenum}
 
-\medskip
-\textbf{Taken together}, our objectives are to create a \textbf{set of benchmarks} featuring \textbf{simple situations}, yet whose \textbf{visual complexity} will reveal \textbf{new facets} of the visual system. These benchmarks can be used in \textbf{behavioral experiments}, \textbf{neurophysiological studies}, and the \textbf{evaluation of neuromorphic algorithms}.
+This formulation makes it straightforward to manipulate interpretable variables
+(density, orientation offset, flow origin, contrast) while preserving a compact
+single-file implementation.
+
+\section*{Library scope}
+The library includes:
+\begin{compactitem}
+    \item low-level generators (noise and Gabor primitives),
+    \item a dedicated visual-flow stimulus constructor,
+    \item optional benchmarking utilities retained for downstream model-comparison workflows.
+\end{compactitem}
+
+\section*{Conclusion}
+ActiveVisionBenchmark should be used first as a stimulus-construction library.
+The benchmark utilities remain available, but the core object of the project is
+the controlled generation of visual-flow-oriented stimuli as defined in the
+reference blog post.
 
 \bibliographystyle{plainnat}
 \bibliography{your_bibliography} % Replace with your .bib file name
