@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ActiveVisionBenchmark"
+version = "0.1.0"
+description = "A lightweight, single-file benchmarking toolkit for active vision systems"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Laurent Perrinet", email = "laurent.perrinet@univ-amu.fr" }]
+keywords = ["active vision", "visual search", "saccades", "benchmark", "foveation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.21"]
+
+[project.optional-dependencies]
+full = ["scipy>=1.7", "matplotlib>=3.4"]
+dev  = ["pytest>=7", "scipy>=1.7", "matplotlib>=3.4"]
+
+[project.urls]
+Homepage   = "https://github.com/laurentperrinet/ActiveVisionBenchmark"
+Repository = "https://github.com/laurentperrinet/ActiveVisionBenchmark"
+Issues     = "https://github.com/laurentperrinet/ActiveVisionBenchmark/issues"
+
+[tool.setuptools]
+py-modules = ["ActiveVisionBenchmark"]
