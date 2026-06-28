@@ -1,9 +1,11 @@
 # ActiveVisionBenchmark
 
-A lightweight, **single-file** Python benchmarking toolkit for **active vision** systems.
+ActiveVisionBenchmark is a lightweight Python toolkit to build and benchmark **active vision** tasks.
+It focuses on controlled visual stimulation for studying perception in closed sensorimotor loops,
+bridging classical simplified stimuli and more ecological visual scenarios.
 
-Active vision refers to perception systems that actively control where they direct
-their gaze or attention to optimally gather information from a visual scene.
+This repository follows the motivation outlined in the paper introduction: preserving experimental
+control while extending benchmarks toward richer, action-dependent visual contexts.
 
 > **Paper:** see [`paper/ActiveVisionBenchmark.tex`](paper/ActiveVisionBenchmark.tex)
 
@@ -34,8 +36,8 @@ into your project.
 | `matplotlib` | optional | `plot_trial`, `plot_roc` |
 
 ```bash
-pip install numpy           # minimum
-pip install numpy scipy matplotlib  # full feature set
+pip install numpy
+pip install numpy scipy matplotlib
 ```
 
 ---
@@ -88,41 +90,24 @@ for name, res in results.items():
 
 ---
 
-## Implementing a Custom Model
-
-```python
-from ActiveVisionBenchmark import ActiveVisionModel
-import numpy as np
-
-class CentreFixationModel(ActiveVisionModel):
-    """Always fixates the image centre, then guesses present."""
-
-    def reset(self, image):
-        self._shape = image.shape[:2]
-
-    def next_fixation(self, foveated_image, fixation_history):
-        h, w = self._shape
-        return h // 2, w // 2
-
-    def make_decision(self):
-        return True
-```
-
----
-
 ## Paper
 
-The accompanying LaTeX paper is in [`paper/ActiveVisionBenchmark.tex`](paper/ActiveVisionBenchmark.tex).
+The LaTeX sources are in [`paper/`](paper).
+The bibliography file is [`paper/AVB.bib`](paper/AVB.bib).
+
 To compile:
 
 ```bash
 cd paper
 pdflatex ActiveVisionBenchmark.tex
-pdflatex ActiveVisionBenchmark.tex   # second pass for cross-references
+bibtex ActiveVisionBenchmark
+pdflatex ActiveVisionBenchmark.tex
+pdflatex ActiveVisionBenchmark.tex
 ```
 
 ---
 
 ## License
 
-[MIT](LICENSE)
+This project is distributed under the **GNU General Public License v3.0**.
+See [`LICENSE`](LICENSE) for the full text.
