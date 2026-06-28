@@ -32,8 +32,8 @@ into your project.
 | `matplotlib` | optional | `plot_trial`, `plot_roc` |
 
 ```bash
-pip install numpy           # minimum
-pip install numpy scipy matplotlib  # full feature set
+pip install numpy
+pip install numpy scipy matplotlib
 ```
 
 ---
@@ -99,17 +99,22 @@ class CentreFixationModel(ActiveVisionModel):
 
 ## Paper
 
-The accompanying LaTeX paper is in [`paper/ActiveVisionBenchmark.tex`](paper/ActiveVisionBenchmark.tex).
+The LaTeX sources are in [`paper/`](paper).
+The bibliography file is [`paper/AVB.bib`](paper/AVB.bib).
+
 To compile:
 
 ```bash
 cd paper
 pdflatex ActiveVisionBenchmark.tex
-pdflatex ActiveVisionBenchmark.tex   # second pass for cross-references
+bibtex ActiveVisionBenchmark
+pdflatex ActiveVisionBenchmark.tex
+pdflatex ActiveVisionBenchmark.tex
 ```
 
 ---
 
 ## License
 
-[MIT](LICENSE)
+This project is distributed under the **GNU General Public License v3.0**.
+See [`LICENSE`](LICENSE) for the full text.
