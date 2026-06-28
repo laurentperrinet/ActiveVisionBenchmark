@@ -1,11 +1,9 @@
 # ActiveVisionBenchmark
 
-ActiveVisionBenchmark is a lightweight Python toolkit to build and benchmark **active vision** tasks.
-It focuses on controlled visual stimulation for studying perception in closed sensorimotor loops,
-bridging classical simplified stimuli and more ecological visual scenarios.
+A lightweight, **single-file** Python toolkit for building **visual stimuli** for active-vision experiments.
 
-This repository follows the motivation outlined in the paper introduction: preserving experimental
-control while extending benchmarks toward richer, action-dependent visual contexts.
+The primary focus is generating the oriented visual-flow stimulus described here:
+https://laurentperrinet.github.io/sciblog/posts/2025-04-24-orienting-yourself-in-the-visual-flow.html
 
 > **Paper:** see [`paper/ActiveVisionBenchmark.tex`](paper/ActiveVisionBenchmark.tex)
 
@@ -13,12 +11,10 @@ control while extending benchmarks toward richer, action-dependent visual contex
 
 ## Features
 
-- 🖼️ **Stimulus generators** – Gaussian noise, Gabor patches, visual-search arrays.
-- 🔬 **Task abstraction** – `VisualSearchTask` produces reproducible `Trial` streams.
-- 🤖 **Model interface** – plug in any algorithm via `ActiveVisionModel`.
-- 👁️ **Foveation** – eccentricity-dependent resolution drop simulated with Gaussian blur.
-- 📊 **Metrics** – accuracy, hit/false-alarm rates, *d'*, mean fixations, search efficiency.
-- 📈 **Visualisation** – scanpath plots and ROC curves (requires `matplotlib`).
+- 🧭 **Visual-flow stimulus** – `make_visual_flow_stimulus` builds oriented local-element patterns.
+- 🖼️ **Base generators** – Gaussian noise and Gabor patches for controlled low-level stimuli.
+- 🧪 **Reproducibility** – explicit random seeds for deterministic stimulus creation.
+- 🔬 **Optional benchmarking layer** – existing task/model/metric tools are still available.
 
 ---
 
@@ -45,27 +41,15 @@ pip install numpy scipy matplotlib
 ## Quick Start
 
 ```python
-from ActiveVisionBenchmark import (
-    Benchmark, RandomSearchModel, SaliencySearchModel, VisualSearchTask,
+from ActiveVisionBenchmark import make_visual_flow_stimulus
+
+stimulus = make_visual_flow_stimulus(
+    size=(256, 256),
+    n_elements=128,
+    focus_of_expansion=(0.0, 0.0),
+    orientation_offset=3.14159 / 2,  # orthogonal to local flow direction
+    seed=0,
 )
-
-# 1. Generate trials
-task   = VisualSearchTask(image_size=(256, 256), n_distractors=10, seed=0)
-trials = task.generate_dataset(n_trials=100)
-
-# 2. Define models
-models = {
-    "Random":   RandomSearchModel(seed=1),
-    "Saliency": SaliencySearchModel(window_size=16, inhibition_radius=20),
-}
-
-# 3. Run benchmark
-bench   = Benchmark(max_fixations=20)
-results = bench.compare(models, trials)
-
-# 4. Print summaries
-for name, res in results.items():
-    print(res.summary())
 ```
 
 ---
@@ -76,6 +60,7 @@ for name, res in results.items():
 |--------|------|---------|
 | `make_gaussian_noise` | function | 2-D Gaussian noise array |
 | `make_gabor_patch` | function | Gabor patch stimulus |
+| `make_visual_flow_stimulus` | function | Oriented visual-flow stimulus image |
 | `make_search_array` | function | Visual-search canvas |
 | `VisualSearchTask` | class | Trial generator |
 | `Trial` | dataclass | Single experimental trial |
@@ -87,6 +72,28 @@ for name, res in results.items():
 | `BenchmarkResult` | dataclass | Metrics container |
 | `plot_trial` | function | Scanpath overlay (matplotlib) |
 | `plot_roc` | function | ROC-space plot (matplotlib) |
+
+---
+
+## Optional: Benchmarking Utilities
+
+```python
+from ActiveVisionBenchmark import ActiveVisionModel
+import numpy as np
+
+class CentreFixationModel(ActiveVisionModel):
+    """Example model for the optional benchmark layer."""
+
+    def reset(self, image):
+        self._shape = image.shape[:2]
+
+    def next_fixation(self, foveated_image, fixation_history):
+        h, w = self._shape
+        return h // 2, w // 2
+
+    def make_decision(self):
+        return True
+```
 
 ---
 
