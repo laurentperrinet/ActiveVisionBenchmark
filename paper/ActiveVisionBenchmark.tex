@@ -167,6 +167,24 @@ Figure~\ref{fig:architecture} illustrates the interaction between layers.
 
 The library includes low-level generators (noise and Gabor primitives), a dedicated visual-flow stimulus constructor, and optional benchmarking utilities retained for downstream model-comparison workflows. Two primitive generators are provided:
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{fig_scenario}
+  \caption{%
+    Schematic of the two benchmark scenario types rendered from a pinhole camera
+    centred at $F_c$ with focal length $f$.
+    The \textbf{green ground plane} ($z=0$) represents the \emph{flat-scene} scenario
+    (e.g.\ navigation over a textured surface).
+    The \textbf{red cylinder} represents the \emph{3-D object} scenario (e.g.\ a confined
+    corridor), in which the agent must localise a volumetric object at polar coordinates
+    $P=(R\cos\theta,\,R\sin\theta,\,Z)$.
+    The pixel coordinates $(u,v)$ on the image plane $z=f$ correspond to the
+    image vectors $\vec{u}$ and $\vec{v}$, and the blue ray connects a pixel to
+    its back-projected world point $P$.%
+  }
+  \label{fig:scenario}
+\end{figure}
+
 \paragraph{\texttt{make\_gaussian\_noise}.}
 Returns a 2-D array of Gaussian luminance noise with configurable mean and standard deviation, useful as a neutral background.
 
