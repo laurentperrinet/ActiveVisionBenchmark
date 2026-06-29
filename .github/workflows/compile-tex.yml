@@ -2,6 +2,8 @@ name: Compile paper
 
 on:
   push:
+    paths:
+      - 'paper/**'
 
 permissions:
   contents: write

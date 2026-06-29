@@ -7,13 +7,13 @@ name = "ActiveVisionBenchmark"
 version = "0.1.0"
 description = "A lightweight, single-file toolkit for visual-flow stimulus construction in active vision"
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "GPL-3.0-or-later" }
 authors = [{ name = "Laurent Perrinet", email = "laurent.perrinet@univ-amu.fr" }]
 keywords = ["active vision", "visual stimulus", "visual flow", "optic flow", "orientation"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
