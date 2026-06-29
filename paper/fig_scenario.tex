@@ -1,13 +1,9 @@
 % Standalone figure: 3D Active Vision Scenario
-% Two scenario types: flat ground plane (green) and cylindrical object (red).
-% Landscape golden-ratio aspect: width/height = 1.618
+% Two scenario types: flat ground plane (green) and tunnel-like cylinder (red).
 %
 % Compile:        pdflatex fig_scenario.tex
 % Include in paper: \includegraphics{fig_scenario}
-%
-% Note: the golden-ratio bounding box is enforced by extending the TikZ bbox
-% in 2D after the 3D scope, so recompiling preserves the aspect ratio.
-\documentclass[border=10pt,multi,tikz]{standalone}
+\documentclass[border=0pt,multi,tikz]{standalone}
 \usepackage{tikz-3dplot}
 \usetikzlibrary{calc,arrows.meta,positioning,backgrounds,shadings,fadings}
 \begin{document}
@@ -71,34 +67,28 @@
     \end{scope}
 
     % ----------------------------------------------------------------
-    % RED CYLINDER  –  represents a 3-D object in the scene
+    % RED CYLINDER  –  tunnel aligned with optical axis (y direction)
     % ----------------------------------------------------------------
-    \def\Cx{1.8}  \def\Cy{5.5}  \def\Ch{1.6}  \def\Cr{0.35}
+    \def\CyNear{3.3}  \def\CyFar{7.7}  \def\Cr{1.15}
+    \coordinate (Fxp) at (\Cr,\CyNear,0);
+    \coordinate (Fxn) at (-\Cr,\CyNear,0);
+    \coordinate (Fzp) at (0,\CyNear,\Cr);
+    \coordinate (Fzn) at (0,\CyNear,-\Cr);
+    \coordinate (Bxp) at (\Cr,\CyFar,0);
+    \coordinate (Bxn) at (-\Cr,\CyFar,0);
+    \coordinate (Bzp) at (0,\CyFar,\Cr);
+    \coordinate (Bzn) at (0,\CyFar,-\Cr);
 
     \begin{scope}[on background layer]
-      % Main face (lit)
-      \path [cylinder body, fill=red!50!white]
-          (\Cx-\Cr,\Cy,0) -- (\Cx-\Cr,\Cy,\Ch)
-          -- (\Cx+\Cr,\Cy,\Ch) -- (\Cx+\Cr,\Cy,0) -- cycle;
-      % Shadow face (darker right edge)
-      \path [fill=red!70!black, fill opacity=0.45, draw=none]
-          (\Cx+\Cr,\Cy,0) -- (\Cx+\Cr,\Cy,\Ch)
-          -- (\Cx+\Cr,\Cy+0.01,\Ch) -- (\Cx+\Cr,\Cy+0.01,0) -- cycle;
+      \path [cylinder body, fill=red!30!white] (Fxp) -- (Bxp) -- (Bzp) -- (Fzp) -- cycle;
+      \path [cylinder body, fill=red!25!white] (Fzp) -- (Bzp) -- (Bxn) -- (Fxn) -- cycle;
+      \path [cylinder body, fill=red!35!white] (Fxn) -- (Bxn) -- (Bzn) -- (Fzn) -- cycle;
+      \path [cylinder body, fill=red!45!white] (Fzn) -- (Bzn) -- (Bxp) -- (Fxp) -- cycle;
+      \path [fill=red!20!white, fill opacity=0.45, draw=red!55!black, line width=0.7pt]
+          (Bxp) -- (Bzp) -- (Bxn) -- (Bzn) -- cycle;
     \end{scope}
-    % Top cap (bright)
-    \draw [fill=red!40!white, fill opacity=0.65,
-           draw=red!50!black, line width=0.8pt]
-        (\Cx-\Cr,\Cy,\Ch) -- (\Cx+\Cr,\Cy,\Ch) -- cycle;
-    \draw [red!60!black, line width=1pt]
-        (\Cx-\Cr,\Cy,\Ch) -- (\Cx+\Cr,\Cy,\Ch);
-    % Vertical edges
-    \draw [cylinder body] (\Cx-\Cr,\Cy,0) -- (\Cx-\Cr,\Cy,\Ch);
-    \draw [cylinder body] (\Cx+\Cr,\Cy,0) -- (\Cx+\Cr,\Cy,\Ch);
-    % Bottom edge
-    \draw [cylinder body] (\Cx-\Cr,\Cy,0) -- (\Cx+\Cr,\Cy,0);
-    % Label
-    \node [red!70!black, font=\scriptsize\sffamily, anchor=west]
-        at (\Cx+\Cr+0.2,\Cy,\Ch*0.5) {3-D object};
+    \path [fill=white, fill opacity=0.82, draw=red!65!black, line width=1pt]
+        (Fxp) -- (Fzp) -- (Fxn) -- (Fzn) -- cycle;
 
     % ----------------------------------------------------------------
     % CAMERA / IMAGE-PLANE CONTENT  (from original draft, unchanged)
@@ -145,9 +135,7 @@
         node [above right=17pt, anchor=north west] {$x$};
 
     % Pixel coordinate vectors
-    \draw [my dashed, green!50!black, <->]
-        (a) node [below=15pt, anchor=north] {$v$} --
-        (b) -- (c) node [above right=17pt, anchor=north west] {$u$};
+    \draw [my dashed, green!50!black, <->] (a) -- (b) -- (c);
     \path [green!50!black,
            every node/.style={font=\scriptsize, inner sep=0pt}]
         (p2) node [above right, anchor=south west] {$(u,v)$};
@@ -169,10 +157,8 @@
     }
 
     % u, v image vectors
-    \draw [my vectors] (0,4,.1) -- ($(s2)+(0,0,.1)$)
-        node [below, my label, sloped] {$\vec{u}$};
-    \draw [my vectors] (-.1,4,0) -- ($(q2)-(s2)+(-.1,4,0)$)
-        node [left, my label] {$\vec{v}$};
+    \draw [my vectors] (0,4,.1) -- ($(s2)+(0,0,.1)$);
+    \draw [my vectors] (-.1,4,0) -- ($(q2)-(s2)+(-.1,4,0)$);
 
     % Optical ray in world space
     \draw [my red] (o) -- (d1.center);
@@ -188,20 +174,6 @@
             node {optical\\axis};
 
   \end{scope} % end tdplot_main_coords scope  ← we are now in 2D
-
-  % ==================================================================
-  % GOLDEN-RATIO BOUNDING-BOX EXTENSION (pure 2D, no 3D transform)
-  %
-  % The 3D content compiles to ~300×240 pt (excl. border).  To reach
-  % a 1:φ (=1:1.618) landscape ratio with the 10 pt border:
-  %   target_content_W = (240+20)×1.618 − 20 ≈ 400.7 pt
-  %   extra per side   = (400.7−300)/2     ≈  50.3 pt
-  %
-  % We extend with invisible \path points so standalone auto-crops
-  % to the correct bounding box.  No recompilation needed.
-  % ==================================================================
-  \path ([xshift=-50.34pt]current bounding box.south west)
-        ([xshift=+50.34pt]current bounding box.north east);
 
 \end{tikzpicture}
 
