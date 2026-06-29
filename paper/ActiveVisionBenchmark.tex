@@ -65,7 +65,9 @@
 % ---------------------------------------------------------------
 % Front matter
 % ---------------------------------------------------------------
-\title{\avb{}:\\Stimulus Construction for Visual-Flow Orientation Experiments}
+\title{Benchmarking Active Vision Algorithms in Models, Behaviour and Neuroscience
+% \avb{}: Stimulus Construction for Visual-Flow Orientation Experiments
+}
 
 \author{Laurent Perrinet\\
         \small Institut de Neurosciences de la Timone (INT),\\
@@ -81,17 +83,46 @@
 \maketitle
 
 \begin{abstract}
-We introduce \avb{}, a single-file Python library for constructing visual stimuli and benchmarking active vision algorithms. The primary purpose of the library is to generate oriented visual-flow stimuli: a configurable visual-flow field defines local motion direction, oriented Gabor elements are placed according to that flow, and the result is composited on a controlled-noise background with explicit random seeds for reproducibility. The reference stimulus design is documented at \href{https://laurentperrinet.github.io/sciblog/posts/2025-04-24-orienting-yourself-in-the-visual-flow.html}{Orienting yourself in the visual flow}. In addition, \avb{} provides (i) configurable stimulus generators including Gabor patches and visual-search arrays, (ii) a minimal model interface that decouples the benchmark harness from algorithm design, (iii) a foveation operator that simulates eccentricity-dependent resolution loss, and (iv) standard signal-detection metrics—accuracy, hit rate, false-alarm rate, and \dprime{}—as well as the scanpath-level metric of search efficiency. Two reference models are included: a uniform random baseline and a contrast-saliency model with inhibition of return. The library has a single mandatory dependency (\texttt{numpy}) and optional dependencies on \texttt{scipy} and \texttt{matplotlib}. The entire implementation fits in one \texttt{.py} file to maximise portability and ease of embedding in existing workflows.
+% PROMPT: the abstract below is not reflecting the content of the introduction. Please rewrite it to be more accurate and informative.
+We introduce \avb{}, a single-file Python library for constructing visual stimuli and benchmarking active vision algorithms. The primary purpose of the library is to generate oriented visual-flow stimuli: a configurable visual-flow field defines local motion direction, oriented Gabor elements are placed according to that flow, and the result is composited on a controlled-noise background with explicit random seeds for reproducibility. In addition, \avb{} provides (i) configurable stimulus generators including Gabor patches and visual-search arrays, (ii) a minimal model interface that decouples the benchmark harness from algorithm design, (iii) a foveation operator that simulates eccentricity-dependent resolution loss, and (iv) standard signal-detection metrics—accuracy, hit rate, false-alarm rate, and \dprime{}—as well as the scanpath-level metric of search efficiency. Two reference models are included: a uniform random baseline and a contrast-saliency model with inhibition of return. The library has as mandatory dependencies \texttt{numpy} and \texttt{torch} and optional dependencies on \texttt{scipy} and \texttt{matplotlib}. The entire implementation fits in one \texttt{ActiveVisionBenchmark.py} file to maximise portability and ease of embedding in existing workflows.
 \end{abstract}
 
-Keywords: active vision, visual search, saccades, benchmark, Python, foveation, signal-detection theory, visual flow, orientation.
+\textbf{Keywords}: active vision, visual search, saccades, benchmark, Python, foveation, signal-detection theory, visual flow, orientation.
 
 % ---------------------------------------------------------------
 \section{Introduction}
 \label{sec:intro}
 % ---------------------------------------------------------------
+% PROMPT : do not change this section, yet 1/ verify the facts 2/ add the corrresponding references 3/ add a few sentences to introduce the library and its purpose in the context of the introduction.
+Advances in vision science, whether in the study of behavior, neural activity, or computational modeling, are closely tied to the visual stimuli used in experimental contexts. In neurophysiology, for example, the earliest demonstrations of the retinotopic organization of the primary visual cortex (V1) were achieved using minute circular light spots presented at different localisations of the visual field: The work of Talbot and Marshall (1941) established a topographic map of V1 using these stimuli, confirming that neurons responding to adjacent regions of the visual field are organized contiguously within the cortex. These findings were later extended by Horace Barlow, who introduced dynamic stimuli, such as sequential light flashes or moving bars, to investigate mechanisms of directional selectivity and spatial summation in the retina and visual cortex. His experiments, conducted in the 1950s, notably revealed the importance of center-surround antagonistic receptive fields and motion detection mechanisms in rabbits and cats.
 
-\avb{} is a compact Python library whose primary purpose is to construct visual stimuli, with a specific emphasis on oriented visual-flow patterns. Rather than positioning the project mainly as a benchmark suite, the library is centered on reproducible stimulus creation for experimental pipelines in behavioral, neurophysiological, and computational vision studies.
+A major turning point in understanding cortical processing of visual information occurred in 1958, when David Hubel and Torsten Wiesel conducted experiments on the visual cortex of cats at Johns Hopkins University. Initially, they used circular light spots as stimuli but obtained no clear or specific neuronal responses. However, a serendipitous discovery changed the course of their research: while moving a glass slide (or a transparency) in front of the stimulation screen, they observed that V1 neurons responded vigorously when the straight edge of the slide crossed their receptive field. This accidental observation led them to systematically test oriented light bars, which revealed the existence of simple cells (sensitive to the orientation and position of edges) and complex cells (sensitive to the movement of edges) in V1. Without this fortuitous discovery, they might have continued using punctate stimuli, as their predecessors did, and would not have identified the importance of orientation and spatial structure in cortical visual processing as rapidly.
+
+In the current era, where neuronal recording techniques have made phenomenal progress, it is essential to consider what constitutes optimal visual stimulation for characterizing the visual system. It is striking that most experiments still employ the same types of stimuli as those used in the pioneering studies mentioned above: light spots, flashes, or oriented bars. Indeed, these stimuli remain indispensable because they allow direct comparisons between current results and historical data, while offering precise control over experimental variables. Recently, some studies have introduced more ecological stimuli, such as natural images or videos. However, these approaches have a major drawback: their complexity makes it difficult to finitely interpret neuronal responses in terms of low-level features, such as the presence of locally oriented edges or elementary motions. To overcome this limitation, many studies now adopt an intermediate strategy, designing parametric stimuli that approximate natural conditions while remaining controllable through ecologically relevant parameters, such as orientation, direction of motion, or texture of the presented objects.
+
+Despite these advances, the stimuli used often remain overly simplistic compared to the complexity of natural environments that the visual system encounters. Two major limitations persist. First, the three-dimensional nature of the visual world: The visual system enables an agent to navigate in a three-dimensional environment. In this regard, certain brain areas, such as the Medial Superior Temporal area (MST) in primates, contain neurons that explicitly encode prototypical optic flows, corresponding to the agent's movements in a static visual world (e.g., expansion or rotation of the visual field). Second, the interaction between the visual system and the environment: The visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a closed sensorimotor loop that reflects the natural functioning of the visual system. Although such systems exist, their use remains limited, due to the technical complexity involved. Last, agent-environment interaction: The visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a closed sensorimotor loop that reflects the natural functioning of the visual system. Although such systems exist, their use remains limited, due to the technical complexity involved. 
+
+In this context, we propose a library designed to extend existing visual simulators, adapting them to both simple and ecological tasks. Our objectives are threefold:
+
+\begin{compactenum}
+    \item Extending stimulation scenarios: Our library allows the projection of existing stimuli into three typical scenarios:
+    First, navigation relative to an infinite plane, simulating, for example, movement over a textured surface. Second, navigation within a cylinder, reproducing a confined environment such as a corridor.
+
+    \item Dynamic stimulus generation: Stimuli can be pre-generated before the experiment or modified in real time, allowing parameters (such as orientation, speed, or texture) to be adjusted during the experiment.
+
+    \item Simplicity and integration: Our goal is to provide a library that is easy to use, in the form of a single Python file with widely available libraries, so that it can be easily integrated into existing libraries that control the experimental workflow.
+\end{compactenum}
+
+Taken together, our objectives are to create a set of benchmarks featuring simple situations, yet whose visual complexity will reveal new facets of the visual system. These benchmarks can be used in behavioral experiments, neurophysiological studies, and the evaluation of neuromorphic algorithms.
+
+The remainder of this paper is organised as follows. Section~\ref{sec:methods} describes the visual-flow stimulus definition and the library design and API. Section~\ref{sec:results} presents experiments comparing the two bundled models. Section~\ref{sec:conclusion} concludes with directions for future work.
+
+% ---------------------------------------------------------------
+\section{Methods}
+\label{sec:methods}
+% ---------------------------------------------------------------
+
+\avb{} is a compact Python library whose primary purpose is to construct visual stimuli, with a specific emphasis on visual-flow patterns. Rather than positioning the project mainly as a benchmark suite, the library is centered on reproducible stimulus creation for experimental pipelines in behavioral, neurophysiological, and computational vision studies.
 
 Active vision—the paradigm in which a perceiving agent controls its own sensory input by moving its eyes, head, or attention—has been a central concept in computational and biological vision research \citep{Bajcsy1988,Yarbus1967,Tatler2011}. Unlike passive, single-shot recognition, active vision systems must balance \emph{exploration} (learning the scene layout) with \emph{exploitation} (acting on accumulated evidence), all under strict limits on the number of fixations that can be made before a decision is required.
 
@@ -100,54 +131,19 @@ Despite the maturity of the field, a standardised, lightweight evaluation toolki
 \avb{} fills this gap by providing a minimal yet complete harness that can be dropped into any Python environment with a single file copy. Its design emphasises:
 
 \begin{itemize}
-  \item Portability. A single \texttt{.py} file with one mandatory dependency (\texttt{numpy}).
+  \item Portability. A single \texttt{ActiveVisionBenchmark.py} file with widely available mandatory dependency (\texttt{numpy}, \texttt{torch}).
   \item Extensibility. A clean abstract-base-class interface (\texttt{ActiveVisionModel}) that makes it trivial to plug in custom algorithms.
-  \item Reproducibility. All stochastic components accept a \texttt{seed} argument and use \texttt{numpy.random.Generator}.
-  \item Evaluability. Standard signal-detection theory (SDT) metrics are computed automatically from trial results.
+  \item Reproducibility. All stochastic components accept a \texttt{seed} argument and use random number generators.
+  \item Efficiency. The \texttt{torch} library is used for efficient tensor operations which allow for fast computation as needed in real-time, closed-loop systems.
 \end{itemize}
 
-The remainder of this paper is organised as follows. Section~\ref{sec:background} reviews relevant background. Section~\ref{sec:stimulus} describes the visual-flow stimulus definition. Section~\ref{sec:design} describes the library design and API. Section~\ref{sec:experiments} presents experiments comparing the two bundled models. Section~\ref{sec:conclusion} concludes with directions for future work.
-
 % ---------------------------------------------------------------
-\section{Background}
-\label{sec:background}
-% ---------------------------------------------------------------
-
-\subsection{Active Vision and Saccadic Search}
-
-Human vision is acutely non-uniform: the fovea, covering approximately $2°$ of visual angle, provides high-resolution colour information while the periphery offers rapidly decreasing acuity with eccentricity \citep{Wandell1995}. To compensate, humans make $3$–$5$ saccadic eye movements per second, redirecting the fovea to informative regions \citep{Henderson2003}. A computational active vision system mimics this by selecting a sequence of fixation locations that maximises information gain within a budget of $N$ fixations.
-
-\subsection{Visual Search}
-
-The classical visual-search paradigm \citep{Treisman1980} asks observers to detect a target item among distractors. The \emph{set size} (number of items) and target salience jointly determine search efficiency, measured as the slope of the reaction-time vs.\ set-size function. \avb{} operationalises this as the ratio of expected fixations under random search to observed fixations under the model.
-
-\subsection{Signal Detection Theory}
-
-Signal detection theory \citep{Green1966} separates \emph{sensitivity} (\dprime{}) from \emph{criterion} by decomposing decisions into hits (correct target-present responses) and false alarms (incorrect target-present responses on absent trials). \avb{} reports both rates and computes \dprime{} using the loglinear correction \citep{Hautus1995} to handle boundary cases.
-
-% ---------------------------------------------------------------
-\section{Stimulus Definition}
-\label{sec:stimulus}
-% ---------------------------------------------------------------
-
-The implemented visual-flow stimulus is based on three principles:
-
-\begin{compactenum}
-    \item A visual-flow field defines local motion direction around a configurable focus of expansion.
-    \item Local oriented elements are generated from that flow direction, with a configurable angular offset.
-    \item The final stimulus is composited on a controlled-noise background with explicit random seeds for reproducibility.
-\end{compactenum}
-
-This formulation makes it straightforward to manipulate interpretable variables (density, orientation offset, flow origin, contrast) while preserving a compact single-file implementation. The reference stimulus design is documented in \href{https://laurentperrinet.github.io/sciblog/posts/2025-04-24-orienting-yourself-in-the-visual-flow.html}{Orienting yourself in the visual flow}.
-
-% ---------------------------------------------------------------
-\section{Library Design}
-\label{sec:design}
-% ---------------------------------------------------------------
-
 \subsection{Architecture Overview}
+% ---------------------------------------------------------------
 
 \avb{} is organised around four conceptual layers, all housed in the single file \texttt{ActiveVisionBenchmark.py}:
+
+The library is available at \url{https://github.com/laurentperrinet/ActiveVisionBenchmark}.
 
 \begin{enumerate}
   \item Stimulus layer. Functions that generate synthetic visual stimuli.
@@ -165,7 +161,9 @@ Figure~\ref{fig:architecture} illustrates the interaction between layers.
   \label{fig:architecture}
 \end{figure}
 
+% ---------------------------------------------------------------
 \subsection{Stimulus Generation}
+% ---------------------------------------------------------------
 
 The library includes low-level generators (noise and Gabor primitives), a dedicated visual-flow stimulus constructor, and optional benchmarking utilities retained for downstream model-comparison workflows. Two primitive generators are provided:
 
@@ -183,11 +181,11 @@ Generates a Gabor patch (sinusoidal grating modulated by a Gaussian envelope) pa
 \paragraph{\texttt{make\_search\_array}.}
 Composes a search array by pasting distractors and an optional target onto a Gaussian-noise canvas. It returns both the image and the target location (or \texttt{None} for target-absent trials), making it suitable for supervised evaluation.
 
+% ---------------------------------------------------------------
 \subsection{Task and Trial}
+% ---------------------------------------------------------------
 
 \texttt{VisualSearchTask} wraps the stimulus layer to provide a reproducible stream of \texttt{Trial} objects. Each trial has a \texttt{target\_present} flag and, when applicable, the ground-truth \texttt{target\_location}. The \texttt{generate\_dataset} method produces a list of $N$ trials, enabling batch evaluation.
-
-\subsection{Model Interface}
 
 The abstract base class \texttt{ActiveVisionModel} defines three methods:
 
@@ -199,37 +197,9 @@ The abstract base class \texttt{ActiveVisionModel} defines three methods:
 
 This interface cleanly separates the \emph{what to look at} (the scanning policy) from the \emph{is the target present} (the detection decision), allowing users to mix and match components.
 
-\subsubsection{RandomSearchModel}
-
-The random baseline selects fixation locations uniformly at random over the image and decides target presence by a fair coin flip. Its expected accuracy is $50\%$, providing a lower bound for detection performance.
-
-\subsubsection{SaliencySearchModel}
-
-The saliency model computes local RMS contrast using a sliding window:
-
-\begin{equation}
-  S(x,y) = \sqrt{\mathbb{E}_{W}[I^2] - \mathbb{E}_{W}[I]^2},
-  \label{eq:saliency}
-\end{equation}
-
-where $\mathbb{E}_W[\cdot]$ denotes averaging over a square window $W$ centred at $(x,y)$. Fixations are drawn greedily from the maximum of $S$ with \emph{inhibition of return} (IoR): a circular region of radius $r_{\text{IoR}}$ around each visited location is zeroed before the next fixation is selected.
-
-\subsection{Foveation Operator}
-
-The \texttt{foveate} function simulates foveal processing by blending the original image (inside a circular foveal region of radius $r_f$) with a Gaussian-blurred version (outside):
-
-\begin{equation}
-  F(x,y) = M(x,y)\,I(x,y) + \bigl(1 - M(x,y)\bigr)\,I * G_{\sigma_p}(x,y),
-  \label{eq:foveation}
-\end{equation}
-
-where $M(x,y) = \mathbf{1}[\|(x,y) - (r,c)\| \le r_f]$ is the foveal mask and $G_{\sigma_p}$ is a Gaussian kernel with periphery blur sigma~$\sigma_p$.
-
-\subsection{Benchmark Engine}
-
-\texttt{Benchmark.run(model, trials)} iterates over trials, calling \texttt{model.reset}, then \texttt{model.next\_fixation} up to \texttt{max\_fixations} times, followed by \texttt{model.make\_decision}. Wall-clock time is recorded per trial. The \texttt{compare} method evaluates multiple models on identical trials, ensuring a fair comparison.
-
+% ---------------------------------------------------------------
 \subsection{Metrics}
+% ---------------------------------------------------------------
 
 \texttt{BenchmarkResult} exposes the following scalar metrics:
 
@@ -252,11 +222,14 @@ Search efficiency & $\eta$ & $\bar{k}_\text{random} / \bar{k}$ \\
 \end{table}
 
 % ---------------------------------------------------------------
-\section{Experiments}
-\label{sec:experiments}
+\section{Results}
+\label{sec:results}
 % ---------------------------------------------------------------
 
-\subsection{Setup}
+% ---------------------------------------------------------------
+\subsection{Navigation scenario}
+% ---------------------------------------------------------------
+
 
 We generated $200$ trials using \texttt{VisualSearchTask} with image size $256 \times 256$ pixels, $10$ distractors per trial, and a target-present probability of $0.5$. Both models were allocated a budget of $20$ fixations. All experiments used fixed seeds for reproducibility.
 
@@ -282,7 +255,9 @@ for name, res in results.items():
     print(res.summary())
 \end{lstlisting}
 
-\subsection{Results}
+% ---------------------------------------------------------------
+\subsection{Navigation scenario}
+% ---------------------------------------------------------------
 
 Table~\ref{tab:results} summarises the performance of both models. The saliency model achieves higher accuracy and a larger \dprime{} than the random baseline, confirming that contrast-based guidance is informative for the conjunction search arrays used here. However, the random model uses fewer ``wasted'' fixations near uniform regions, resulting in a marginally larger search efficiency on target-absent trials.
 
@@ -340,8 +315,6 @@ Saliency & \todo{fill} & \todo{fill} & \todo{fill} & \todo{fill} & 20.00 & 1.00 
 
 \avb{} should be used first as a stimulus-construction library for visual-flow-oriented experiments. The benchmark utilities remain available, but the core object of the project is the controlled generation of visual-flow-oriented stimuli as defined in the reference blog post. We have described \avb{} as a self-contained, single-file Python toolkit for benchmarking active vision systems. The library provides stimulus generation, a task abstraction, a model interface, a foveation operator, and standard signal-detection metrics, all within a minimal dependency footprint. We hope that \avb{} will lower the barrier to reproducible comparisons of active-vision algorithms across the neuroscience and computer-vision communities.
 
-The library is available at \url{https://github.com/laurentperrinet/ActiveVisionBenchmark}.
-
 % ---------------------------------------------------------------
 % Bibliography
 % ---------------------------------------------------------------
@@ -351,6 +324,8 @@ The library is available at \url{https://github.com/laurentperrinet/ActiveVision
 % ---------------------------------------------------------------
 % Inline bibliography (no .bib file needed for compilation)
 % ---------------------------------------------------------------
+% PROMPT: merge the following items in the `ActiveVisionBenchmark.bib`file and remove the inline bibliography below.
+
 \begin{thebibliography}{99}
 
 \bibitem[Bajcsy(1988)]{Bajcsy1988}
