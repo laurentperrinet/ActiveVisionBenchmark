@@ -8,6 +8,9 @@
 \usetikzlibrary{calc,arrows.meta,positioning,backgrounds,shadings,fadings}
 \begin{document}
 
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
 \tdplotsetmaincoords{-60}{-35}
 
 \begin{tikzpicture}
@@ -27,7 +30,7 @@
     my vectors/.style={green!50!black,
         {Stealth[scale=.75]}-{Stealth[scale=.75]}},
     my red/.style={thick, red, line cap=round},
-    my grey/.style={gray!70},
+    my grey/.style={gray!10, fill opacity=0.35},
     description/.style={draw=gray!70, thick, line cap=round,
         every node/.style={align=center, font=\scriptsize\sffamily,
             anchor=north}},
@@ -57,11 +60,9 @@
         \draw [green!50!black, opacity=0.30, thin]
             (-\xmax,\yy,0) -- (\xmax,\yy,0);
       }
-      % Radial grid lines for perspective
-      \foreach \xx in {-2,-1,0,1,2} {
-        \draw [green!50!black, opacity=0.25, thin]
-            (\xx,1,0) -- (\xx*2.5,8,0);
-      }
+      % Keep only the central depth guide; remove diagonal perspective guides
+      \draw [green!50!black, opacity=0.25, thin]
+          (0,1,0) -- (0,8,0);
       \draw [green!40!black, opacity=0.6, thin]
           (-3,1,0) -- (3,1,0) -- (3,8,0) -- (-3,8,0) -- cycle;
     \end{scope}
@@ -69,26 +70,25 @@
     % ----------------------------------------------------------------
     % RED CYLINDER  –  tunnel aligned with optical axis (y direction)
     % ----------------------------------------------------------------
-    \def\CyNear{3.3}  \def\CyFar{7.7}  \def\Cr{1.15}
-    \coordinate (Fxp) at (\Cr,\CyNear,0);
-    \coordinate (Fxn) at (-\Cr,\CyNear,0);
-    \coordinate (Fzp) at (0,\CyNear,\Cr);
-    \coordinate (Fzn) at (0,\CyNear,-\Cr);
-    \coordinate (Bxp) at (\Cr,\CyFar,0);
-    \coordinate (Bxn) at (-\Cr,\CyFar,0);
-    \coordinate (Bzp) at (0,\CyFar,\Cr);
-    \coordinate (Bzn) at (0,\CyFar,-\Cr);
+    \def\CyNear{4.0}  \def\CyFar{8.0}  \def\Cr{1.89}
+        \begin{scope}[on background layer]
+            % Back circular rim (true circular cross-section in x-z at y=CyFar)
+            \path [fill=red!20!white, fill opacity=0.45, draw=red!55!black, line width=0.7pt]
+                plot [variable=\t, domain=0:359, samples=120]
+                ({\Cr*cos(\t)},{\CyFar},{\Cr*sin(\t)}) -- cycle;
 
-    \begin{scope}[on background layer]
-      \path [cylinder body, fill=red!30!white] (Fxp) -- (Bxp) -- (Bzp) -- (Fzp) -- cycle;
-      \path [cylinder body, fill=red!25!white] (Fzp) -- (Bzp) -- (Bxn) -- (Fxn) -- cycle;
-      \path [cylinder body, fill=red!35!white] (Fxn) -- (Bxn) -- (Bzn) -- (Fzn) -- cycle;
-      \path [cylinder body, fill=red!45!white] (Fzn) -- (Bzn) -- (Bxp) -- (Fxp) -- cycle;
-      \path [fill=red!20!white, fill opacity=0.45, draw=red!55!black, line width=0.7pt]
-          (Bxp) -- (Bzp) -- (Bxn) -- (Bzn) -- cycle;
-    \end{scope}
-    \path [fill=white, fill opacity=0.82, draw=red!65!black, line width=1pt]
-        (Fxp) -- (Fzp) -- (Fxn) -- (Fzn) -- cycle;
+            % Longitudinal generators to reveal the cylindrical surface
+            \foreach \ang in {0,15,...,345} {
+                \draw [red!60!black, opacity=0.30, line width=0.6pt]
+                    ({\Cr*cos(\ang)},{\CyNear},{\Cr*sin(\ang)}) --
+                    ({\Cr*cos(\ang)},{\CyFar},{\Cr*sin(\ang)});
+            }
+        \end{scope}
+
+        % Front circular opening
+        \path [fill=white, fill opacity=0.82, draw=red!65!black, line width=1pt]
+            plot [variable=\t, domain=0:359, samples=120]
+            ({\Cr*cos(\t)},{\CyNear},{\Cr*sin(\t)}) -- cycle;
 
     % ----------------------------------------------------------------
     % CAMERA / IMAGE-PLANE CONTENT  (from original draft, unchanged)
@@ -105,16 +105,16 @@
         ++(0,0,3.5)   coordinate (d) -- cycle
         node [pos=.95, above, sloped, anchor=south west] {$z=f$};
 
-    \draw [my grey]
-        (-2,0,0) -- (2,0,0)
+    \draw [my grey, line width=1.5pt]
+        (-1,0,0) -- (1,0,0)
         (0,0,0) -- (0,4,0)
-        (0,0,0) -- (0,0,2);
+        (0,0,0) -- (0,0,1.4);
 
     % Camera frame axes
     \draw [thick, ->,
            every node/.style={font=\footnotesize, inner sep=0pt}]
         (o) node [anchor=north west] {$F_c$}
-        (o) edge node [pos=1, anchor=north east] {$z_c$} ++(0,1,0)
+        (o) edge node [pos=1.1, anchor=east] {$z_c$} ++(0,1,0)
             edge node [pos=1, anchor=north]      {$y_c$} ++(0,0,1)
             -- ++(1,0,0) node [anchor=north west] {$x_c$};
 
@@ -152,13 +152,14 @@
           ($($1.75*($(s2)-(0,4,0)$)$)+(0,7,0)$) --
           ++($1.75*($(r2)-(s2)$)$)
           node (d2)
-              [label={[label distance=-50pt]above:
-                  {$P=(R\cdot\cos\theta,\,R\cdot\sin\theta,\,Z)$}}] {};
+            %   [label={[label distance=-22pt] above right:
+            %       {$P=(R\cdot\cos\theta,\,R\cdot\sin\theta,\,Z)$}}]
+                   {};
     }
 
     % u, v image vectors
-    \draw [my vectors] (0,4,.1) -- ($(s2)+(0,0,.1)$);
-    \draw [my vectors] (-.1,4,0) -- ($(q2)-(s2)+(-.1,4,0)$);
+    % \draw [my vectors] (0,4,.1) -- ($(s2)+(0,0,.1)$);
+    % \draw [my vectors] (-.1,4,0) -- ($(q2)-(s2)+(-.1,4,0)$);
 
     % Optical ray in world space
     \draw [my red] (o) -- (d1.center);
@@ -166,12 +167,14 @@
         \draw [my red] (d1.center) -- (d2.center);
     }
 
-    % Annotation callouts
-    \path [description]
-        (0,4,0)   [out=-95, in=95] to (-.75,4,.25)
-            node {fixation\\point}
-        (0,6.5,0) [out=-95, in=95] to (-.75,6.5,.25)
-            node {optical\\axis};
+    % Annotation callouts (forced to top-most layer)
+    \begin{pgfonlayer}{foreground}
+      \path [description]
+          (0,4,0)   [out=-95, in=95] to (-.75,4,.25)
+              node {fixation\\point}
+          (0,7.5,0) [out=-95, in=95] to (-.75,7.5,.25)
+              node {optical\\axis};
+    \end{pgfonlayer}
 
   \end{scope} % end tdplot_main_coords scope  ← we are now in 2D
 
