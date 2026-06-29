@@ -140,6 +140,25 @@ The implemented visual-flow stimulus is based on three principles:
 
 This formulation makes it straightforward to manipulate interpretable variables (density, orientation offset, flow origin, contrast) while preserving a compact single-file implementation. The reference stimulus design is documented in \href{https://laurentperrinet.github.io/sciblog/posts/2025-04-24-orienting-yourself-in-the-visual-flow.html}{Orienting yourself in the visual flow}.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{fig_scenario}
+  \caption{%
+    Schematic of the two benchmark scenario types rendered from a pinhole camera
+    centred at $F_c$ with focal length $f$.
+    The \textbf{green ground plane} ($z=0$) represents the \emph{flat-scene} scenario
+    in which targets are located on a planar surface (e.g.\ visual-search in a fronto-parallel
+    stimulus).
+    The \textbf{red cylinder} represents the \emph{3-D object} scenario in which the
+    agent must localise a volumetric object at polar coordinates
+    $P=(R\cos\theta,\,R\sin\theta,\,Z)$.
+    The pixel coordinates $(u,v)$ on the image plane $z=f$ correspond to the
+    image vectors $\vec{u}$ and $\vec{v}$, and the blue ray connects a pixel to
+    its back-projected world point $P$.%
+  }
+  \label{fig:scenario}
+\end{figure}
+
 % ---------------------------------------------------------------
 \section{Library Design}
 \label{sec:design}
