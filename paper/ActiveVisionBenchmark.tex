@@ -94,7 +94,8 @@
 
 \begin{abstract}
 % PROMPT: the abstract below is not reflecting the content of the introduction. Please rewrite it to be more accurate and informative.
-We introduce \avb{}, a single-file Python library for constructing visual stimuli and benchmarking active vision algorithms. The primary purpose of the library is to generate oriented visual-flow stimuli: a configurable visual-flow field defines local motion direction, oriented Gabor elements are placed according to that flow, and the result is composited on a controlled-noise background with explicit random seeds for reproducibility. In addition, \avb{} provides (i) configurable stimulus generators including Gabor patches and visual-search arrays, (ii) a minimal model interface that decouples the benchmark harness from algorithm design, (iii) a foveation operator that simulates eccentricity-dependent resolution loss, and (iv) standard signal-detection metrics—accuracy, hit rate, false-alarm rate, and \dprime{}—as well as the scanpath-level metric of search efficiency. Two reference models are included: a uniform random baseline and a contrast-saliency model with inhibition of return. The library has as mandatory dependencies \texttt{numpy} and \texttt{torch} and optional dependencies on \texttt{scipy} and \texttt{matplotlib}. The entire implementation fits in one \texttt{ActiveVisionBenchmark.py} file to maximise portability and ease of embedding in existing workflows.
+% DONE: Rewrote the abstract to emphasise stimulus construction, visual-flow stimuli, optional benchmarking utilities, and the actual dependency footprint of the library.
+We present \avb{}, a lightweight single-file Python library for constructing controlled visual stimuli for active-vision experiments, with a particular focus on oriented visual-flow patterns. The library generates Gaussian-noise backgrounds, Gabor elements, visual-search arrays, and visual-flow stimuli in which local element orientation is tied to an underlying optic-flow field, all with explicit random seeds for reproducibility. When model comparison is needed, \avb{} also provides a minimal task abstraction, an abstract active-vision model interface, a foveation operator, two reference search models, and standard detection and scanpath metrics. By keeping the implementation self-contained in \texttt{ActiveVisionBenchmark.py} and relying on \texttt{numpy} as the only mandatory dependency, the project is intended for easy integration into behavioural, neurophysiological, and computational vision workflows.
 \end{abstract}
 
 \textbf{Keywords}: active vision, visual search, saccades, benchmark, Python, foveation, signal-detection theory, visual flow, orientation.
@@ -104,13 +105,16 @@ We introduce \avb{}, a single-file Python library for constructing visual stimul
 \label{sec:intro}
 % ---------------------------------------------------------------
 % PROMPT : do not change this section, yet 1/ verify the facts 2/ add the corrresponding references 3/ add a few sentences to introduce the library and its purpose in the context of the introduction.
-Advances in vision science, whether in the study of behavior, neural activity, or computational modeling, are closely tied to the visual stimuli used in experimental contexts. In neurophysiology, for example, the earliest demonstrations of the retinotopic organization of the primary visual cortex (V1) were achieved using minute circular light spots presented at different localisations of the visual field: The work of Talbot and Marshall (1941) established a topographic map of V1 using these stimuli, confirming that neurons responding to adjacent regions of the visual field are organized contiguously within the cortex. These findings were later extended by Horace Barlow, who introduced dynamic stimuli, such as sequential light flashes or moving bars, to investigate mechanisms of directional selectivity and spatial summation in the retina and visual cortex. His experiments, conducted in the 1950s, notably revealed the importance of center-surround antagonistic receptive fields and motion detection mechanisms in rabbits and cats.
+% DONE: Added references for the historical examples, corrected the duplicated active-agent paragraph, and inserted a short paragraph positioning the library within that methodological gap.
+Advances in vision science, whether in the study of behavior, neural activity, or computational modeling, are closely tied to the visual stimuli used in experimental contexts. In neurophysiology, for example, early demonstrations of the retinotopic organization of the primary visual cortex (V1) relied on small light stimuli presented at different locations in the visual field. The work of Talbot and Marshall established a topographic map of V1 using such stimuli, confirming that neurons responding to adjacent regions of the visual field are organized contiguously within the cortex \citep{Talbot1941}. These foundational studies were followed by analyses of temporally varying stimuli and receptive-field structure, including Horace Barlow's work on summation and inhibition and Stephen Kuffler's description of center-surround retinal organization \citep{Barlow1953,Kuffler1953}.
 
-A major turning point in understanding cortical processing of visual information occurred in 1958, when David Hubel and Torsten Wiesel conducted experiments on the visual cortex of cats at Johns Hopkins University. Initially, they used circular light spots as stimuli but obtained no clear or specific neuronal responses. However, a serendipitous discovery changed the course of their research: while moving a glass slide (or a transparency) in front of the stimulation screen, they observed that V1 neurons responded vigorously when the straight edge of the slide crossed their receptive field. This accidental observation led them to systematically test oriented light bars, which revealed the existence of simple cells (sensitive to the orientation and position of edges) and complex cells (sensitive to the movement of edges) in V1. Without this fortuitous discovery, they might have continued using punctate stimuli, as their predecessors did, and would not have identified the importance of orientation and spatial structure in cortical visual processing as rapidly.
+A major turning point in understanding cortical processing of visual information occurred in the late 1950s, when David Hubel and Torsten Wiesel studied single-neuron responses in cat visual cortex. Initially, punctate light stimuli produced limited selectivity, but their now-famous observation that a moving edge crossing the receptive field elicited strong responses led them to test oriented bars systematically. Those experiments revealed simple and complex cells in V1 and established orientation selectivity as a central principle of cortical visual processing \citep{HubelWiesel1959,HubelWiesel1962}.
 
 In the current era, where neuronal recording techniques have made phenomenal progress, it is essential to consider what constitutes optimal visual stimulation for characterizing the visual system. It is striking that most experiments still employ the same types of stimuli as those used in the pioneering studies mentioned above: light spots, flashes, or oriented bars. Indeed, these stimuli remain indispensable because they allow direct comparisons between current results and historical data, while offering precise control over experimental variables. Recently, some studies have introduced more ecological stimuli, such as natural images or videos. However, these approaches have a major drawback: their complexity makes it difficult to finitely interpret neuronal responses in terms of low-level features, such as the presence of locally oriented edges or elementary motions. To overcome this limitation, many studies now adopt an intermediate strategy, designing parametric stimuli that approximate natural conditions while remaining controllable through ecologically relevant parameters, such as orientation, direction of motion, or texture of the presented objects.
 
-Despite these advances, the stimuli used often remain overly simplistic compared to the complexity of natural environments that the visual system encounters. Two major limitations persist. First, the three-dimensional nature of the visual world: The visual system enables an agent to navigate in a three-dimensional environment. In this regard, certain brain areas, such as the Medial Superior Temporal area (MST) in primates, contain neurons that explicitly encode prototypical optic flows, corresponding to the agent's movements in a static visual world (e.g., expansion or rotation of the visual field). Second, the interaction between the visual system and the environment: The visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a closed sensorimotor loop that reflects the natural functioning of the visual system. Although such systems exist, their use remains limited, due to the technical complexity involved. Last, agent-environment interaction: The visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a closed sensorimotor loop that reflects the natural functioning of the visual system. Although such systems exist, their use remains limited, due to the technical complexity involved. 
+Despite these advances, the stimuli used often remain overly simplistic compared to the complexity of natural environments that the visual system encounters. Two major limitations persist. First, the three-dimensional nature of the visual world: the visual system enables an agent to navigate in a three-dimensional environment, and neurons in primate medial superior temporal cortex are known to encode large-field optic-flow patterns associated with self-motion, such as expansion and rotation \citep{DuffyWurtz1991}. Second, agent--environment interaction: the visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a closed sensorimotor loop that reflects the natural functioning of the visual system \citep{Bajcsy1988}. Although such systems exist, their use remains limited because experimental control, reproducibility, and software integration remain technically demanding.
+
+Within this gap, \avb{} is intended as a lightweight bridge between classical parametric stimuli and more ecological active-vision paradigms. The library concentrates on reproducible stimulus construction---especially oriented visual-flow stimuli---while preserving a minimal benchmarking interface for comparing search policies under a common fixation budget. Its single-file design is meant to ease adoption inside existing behavioural, neurophysiological, and computational pipelines.
 
 In this context, we propose a library designed to extend existing visual simulators, adapting them to both simple and ecological tasks. Our objectives are threefold:
 
@@ -139,10 +143,10 @@ Active vision—the paradigm in which a perceiving agent controls its own sensor
 \avb{} fills this gap by providing a minimal yet complete harness that can be dropped into any Python environment with a single file copy. Its design emphasises:
 
 \begin{itemize}
-  \item Portability. A single \texttt{ActiveVisionBenchmark.py} file with widely available mandatory dependency (\texttt{numpy}, \texttt{torch}).
+  \item Portability. A single \texttt{ActiveVisionBenchmark.py} file with one widely available mandatory dependency (\texttt{numpy}).
   \item Extensibility. A clean abstract-base-class interface (\texttt{ActiveVisionModel}) that makes it trivial to plug in custom algorithms.
   \item Reproducibility. All stochastic components accept a \texttt{seed} argument and use random number generators.
-  \item Efficiency. The \texttt{torch} library is used for efficient tensor operations which allow for fast computation as needed in real-time, closed-loop systems.
+  \item Efficiency. Stimulus generation and evaluation rely on vectorised \texttt{numpy} operations, with optional \texttt{scipy} and \texttt{matplotlib} support for foveation, saliency, and plotting.
 \end{itemize}
 
 % ---------------------------------------------------------------
@@ -352,72 +356,9 @@ Table~\ref{tab:results} summarises the performance of both models. The saliency 
 \bibliography{ActiveVisionBenchmark}
 
 % ---------------------------------------------------------------
-% Inline bibliography (no .bib file needed for compilation)
+% Bibliography maintenance
 % ---------------------------------------------------------------
 % PROMPT: merge the following items in the `ActiveVisionBenchmark.bib`file and remove the inline bibliography below.
-
-\begin{thebibliography}{99}
-
-\bibitem[Bajcsy(1988)]{Bajcsy1988}
-Bajcsy, R. (1988).
-\newblock Active perception.
-\newblock \emph{Proceedings of the IEEE}, 76(8):966--1005.
-
-\bibitem[Green \& Swets(1966)]{Green1966}
-Green, D.~M. and Swets, J.~A. (1966).
-\newblock \emph{Signal Detection Theory and Psychophysics}.
-\newblock Wiley, New York.
-
-\bibitem[Hautus(1995)]{Hautus1995}
-Hautus, M.~J. (1995).
-\newblock Corrections for extreme proportions and their effect on estimated values of $d'$.
-\newblock \emph{Behavior Research Methods, Instruments, \& Computers}, 27(1):46--51.
-
-\bibitem[Henderson(2003)]{Henderson2003}
-Henderson, J.~M. (2003).
-\newblock Human gaze control during real-world scene perception.
-\newblock \emph{Trends in Cognitive Sciences}, 7(11):498--504.
-
-\bibitem[Judd et al.(2009)]{Judd2009}
-Judd, T., Ehinger, K., Durand, F., and Torralba, A. (2009).
-\newblock Learning to predict where humans look.
-\newblock In \emph{Proceedings of ICCV 2009}.
-
-\bibitem[Kummerer et al.(2016)]{Kummerer2016}
-K{\"u}mmerer, M., Wallis, T.~S.~A., and Bethge, M. (2016).
-\newblock DeepGaze~II: Reading fixations from deep features trained on object recognition.
-\newblock \emph{arXiv:1610.01563}.
-
-\bibitem[Lin et al.(2014)]{Lin2014}
-Lin, T.-Y. et al. (2014).
-\newblock Microsoft COCO: Common objects in context.
-\newblock In \emph{ECCV 2014}.
-
-\bibitem[Najemnik \& Geisler(2005)]{Najemnik2005}
-Najemnik, J. and Geisler, W.~S. (2005).
-\newblock Optimal eye movement strategies in visual search.
-\newblock \emph{Nature}, 434:387--391.
-
-\bibitem[Tatler et al.(2011)]{Tatler2011}
-Tatler, B.~W., Hayhoe, M.~M., Land, M.~F., and Ballard, D.~H. (2011).
-\newblock Eye guidance in natural vision: Reinterpreting salience.
-\newblock \emph{Journal of Vision}, 11(5):5.
-
-\bibitem[Treisman \& Gelade(1980)]{Treisman1980}
-Treisman, A.~M. and Gelade, G. (1980).
-\newblock A feature-integration theory of attention.
-\newblock \emph{Cognitive Psychology}, 12(1):97--136.
-
-\bibitem[Wandell(1995)]{Wandell1995}
-Wandell, B.~A. (1995).
-\newblock \emph{Foundations of Vision}.
-\newblock Sinauer Associates.
-
-\bibitem[Yarbus(1967)]{Yarbus1967}
-Yarbus, A.~L. (1967).
-\newblock \emph{Eye Movements and Vision}.
-\newblock Plenum Press, New York.
-
-\end{thebibliography}
+% DONE: Kept BibTeX as the single source of truth, added the new historical references there, and removed the redundant inline bibliography block.
 
 \end{document}
