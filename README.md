@@ -102,14 +102,15 @@ class CentreFixationModel(ActiveVisionModel):
 The LaTeX sources are in [`paper/`](paper).
 The bibliography file is [`paper/AVB.bib`](paper/AVB.bib).
 
-To compile:
+The PDF is compiled automatically by CI whenever `paper/` changes (see
+[`.github/workflows/compile-tex.yml`](.github/workflows/compile-tex.yml))
+and committed back as `paper/ActiveVisionBenchmark.pdf`.
+
+To compile locally:
 
 ```bash
 cd paper
-pdflatex ActiveVisionBenchmark.tex
-bibtex ActiveVisionBenchmark
-pdflatex ActiveVisionBenchmark.tex
-pdflatex ActiveVisionBenchmark.tex
+latexmk -pdf -bibtex -interaction=nonstopmode ActiveVisionBenchmark.tex
 ```
 
 ---

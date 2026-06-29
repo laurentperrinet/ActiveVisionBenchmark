@@ -32,7 +32,7 @@ import numpy as np
 
 __version__ = "0.1.0"
 __author__ = "Laurent Perrinet"
-__license__ = "MIT"
+__license__ = "GPL-3.0-or-later"
 
 # ---------------------------------------------------------------------------
 # Utility helpers
