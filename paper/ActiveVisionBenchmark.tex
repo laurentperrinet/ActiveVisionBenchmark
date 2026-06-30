@@ -376,35 +376,37 @@ In this context, \avb{} provides a flexible and reproducible framework for intro
 \subsection{Closing the loop: landing scenarios}
 \label{subsec:landing}
 % ---------------------------------------------------------------
-To close the sensorimotor loop, we defined a landing task in which the agent must steer toward a ground target and maintain a stable touchdown condition. A landing episode is declared successful only if the agent reaches the target zone for several consecutive control steps, which prevents counting transient or accidental contacts as true successes. Model performance is evaluated with two primary outcomes:
+To close the sensorimotor loop, we implemented a landing task where the agent must steer toward a ground target and maintain a stable touchdown condition. A landing episode is only considered successful if the agent maintains contact with the target zone for multiple consecutive control steps, thereby excluding transient or accidental touches. We evaluate model performance using two complementary metrics:
 \begin{itemize}
-    \item Success rate: The proportion of successful landings over a fixed set of $100$ episodes.
-    \item Time-to-land: The number of control steps required to satisfy the consecutive-success criterion.
+    \item \textbf{Success rate}: The proportion of successful landings across a fixed set of $100$ episodes.
+    \item \textbf{Time-to-land}: The number of control steps required to achieve stable contact with the target.
 \end{itemize}
 
-Landing using time-to-contact and ventral optic flow estimates is a well-studied problem in both biological and robotic systems. In biological vision, time-to-contact estimation from optic flow is a fundamental mechanism for guiding actions such as landing, grasping, or collision avoidance~\parencite{Izzo2012}. This capability has also been leveraged in robotics, where optic flow-based control strategies enable drones to perform autonomous landings with high precision, even in dynamic environments~\parencite{Izzo2012}. Recent advances in neuromorphic engineering have further demonstrated that event-based cameras can efficiently compute time-to-contact from sparse, asynchronous visual data, offering robust solutions for real-time applications in challenging lighting conditions~\parencite{Nunes2023}.
+The use of time-to-contact estimates derived from ventral optic flow is a well-established approach in both biological and robotic systems. In biological vision, time-to-contact computation from optic flow serves as a fundamental mechanism for guiding critical actions such as landing, grasping, and collision avoidance~\parencite{Izzo2012}. In robotics, optic flow-based control strategies have enabled drones to perform precise autonomous landings, even in complex, dynamic environments~\parencite{Izzo2012}. Recent advances in neuromorphic engineering have further demonstrated that event-based cameras can efficiently compute time-to-contact from sparse, asynchronous visual data, providing robust real-time solutions under challenging lighting conditions~\parencite{Nunes2023}.
 
-
-\begin{figure}%[htbp]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.465\linewidth]{landing_events.png}
   \hfill
   \includegraphics[width=0.48\linewidth]{landing_flow.png}
   \caption{%
-    Experimental results from a closed-loop landing task using ventral optic flow. We show the data acquired from a single trial of a drone navigating indoors in a landing scenario. The left panel displays the raw pixels event data, either with ON pixels (white) or OFF pixels (black). The right panel shows the corresponding ventral optic flow field at a specific time point during the descent, illustrating how the flow vectors converge toward the target zone~\parencite{Nunes2023}. This closed-loop control strategy allows for real-time adjustments to maintain a stable touchdown condition. This illustrates the importance and difficulty of designing neuromorphic involving closed-loop control and the use of synthetic benchmarks such as \avb{}. 
+    Experimental data from a closed-loop landing task using ventral optic flow.
+    \textit{Left}: Raw event-based camera data showing ON (white) and OFF (black) pixel events during descent.
+    \textit{Right}: Corresponding ventral optic flow field at a representative time point, with flow vectors converging toward the target zone.
+    These data illustrate the visual information available for closed-loop control in landing scenarios~\parencite{Nunes2023}.%
   }
   \label{fig:landing}
 \end{figure}
 
-In our experiments, we implemented a simple landing policy based on ventral optic flow, computed from the visual input projected onto the ground plane (see Figure~\ref{fig:landing}). The agent adjusts its descent rate based on the magnitude of the optic flow, aiming to maintain a constant time-to-contact with the target zone. This closed-loop control strategy allows us to evaluate how well different active-vision models can exploit visual-flow information to achieve a successful landing. More broadly, \avb{} provides a flexible framework for studying such sensorimotor tasks by enabling researchers to:
+In our implementation, we use a ventral optic flow-based landing policy, where the agent adjusts its descent rate according to the magnitude of optic flow computed from the visual input projected onto the ground plane (Figure~\ref{fig:landing}). By maintaining a constant time-to-contact with the target zone, this closed-loop strategy allows us to evaluate how effectively different active-vision models can exploit visual-flow information to achieve successful landings.
+
+The \avb{} framework provides particular advantages for studying such sensorimotor tasks by enabling researchers to:
 \begin{itemize}
-    \item Generate controlled, reproducible optic-flow patterns that mimic natural landing conditions.
-    \item Systematically vary parameters such as texture, speed, and perturbation to probe the robustness of landing strategies.
-    \item Compare biological and algorithmic performance under identical stimulus conditions, bridging the gap between neuroscience and robotics.
+    \item Generate controlled, reproducible optic-flow patterns that closely mimic natural landing conditions.
+    \item Systematically vary parameters such as texture properties, movement speed, and sensorimotor perturbations to test the robustness of landing strategies.
+    \item Compare biological and algorithmic performance under identical, well-controlled stimulus conditions, thereby bridging the gap between neuroscience and robotics.
 \end{itemize}
-This capability is particularly valuable for translating biological insights into robotic applications and for validating computational models of active vision in ecologically relevant scenarios.
-
-
+This capability is especially valuable for translating biological insights into robotic applications and for validating computational models of active vision in ecologically relevant scenarios.
 % ===============================================================
 % DISCUSSION
 % ===============================================================
