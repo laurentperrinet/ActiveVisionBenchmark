@@ -1,13 +1,10 @@
 %!TeX TS-program = lualatex
 %!TeX encoding = UTF-8 Unicode
 %!TeX spellcheck = en-UK
-%!BIB TS-program = bibtex
+%!BIB TS-program = biber
 % -*- coding: UTF-8; -*-
 % vim: set fenc=utf-8
 %-----------------------
-%
-% PROMPT : adapt the github workflow to the compilation instructions given above. in particcular use biber, biblatex and ytransform the bib file to reflect these changes.
-
 \documentclass[12pt,a4paper]{article}
 
 % ---------------------------------------------------------------
@@ -19,17 +16,24 @@
 \usepackage{microtype}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
-\usepackage{booktabs}
-\usepackage{hyperref}
+\usepackage{booktabs}  % Pour des tableaux professionnels
 \usepackage{xcolor}
 \usepackage{listings}
-\usepackage{natbib}
+\usepackage[backend=biber, style=numeric, sorting=none]{biblatex}
 \usepackage{geometry}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{paralist}
+\usepackage{csquotes}  % Requis pour biblatex
+\usepackage{hyperref}
+
+\usepackage{lipsum}  % Pour le texte temporaire (à supprimer en final)
+\usepackage{lineno}  % Pour la numérotation des lignes (utile pour les révisions)
+
+% Chargement du fichier .bib avec biblatex
+\addbibresource{ActiveVisionBenchmark.bib}
 
 \geometry{margin=2.5cm}
 
@@ -39,10 +43,11 @@
 \hypersetup{
   colorlinks=true,
   linkcolor=blue!60!black,
-  citecolor=green!50!black,
+  citecolor=green!50!black, 
   urlcolor=blue!70!black,
   pdftitle={ActiveVisionBenchmark: Benchmarking Active Vision Algorithms in Models, Behaviour and Neuroscience},
   pdfauthor={Laurent Perrinet},
+  pdfkeywords={active vision, visual flow, orientation, benchmark, Python, optic flow, sensorimotor loop}
 }
 
 % ---------------------------------------------------------------
@@ -68,21 +73,24 @@
 % ---------------------------------------------------------------
 % Macros
 % ---------------------------------------------------------------
-\newcommand{\avb}{\textsc{ActiveVisionBenchmark}}
-\newcommand{\dprime}{$d'$}
+\newcommand{\avb}{\textsc{ActiveVisionBenchmark}}  % Macro pour le nom du projet
+\newcommand{\dprime}{$d'$}  % Macro pour d-prime
 \newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
+
+\newcommand{\FoE}{\textsc{FoE}}  % Focus of Expansion
+\newcommand{\MST}{\textsc{MST}}  % Medial Superior Temporal area
 
 % ---------------------------------------------------------------
 % Front matter
 % ---------------------------------------------------------------
-\title{Benchmarking Active Vision Algorithms in Models, Behaviour and Neuroscience
-% \avb{}: Stimulus Construction for Visual-Flow Orientation Experiments
+\title{
+  Benchmarking Active Vision Algorithms in Models, Behaviour and Neuroscience
 }
-
-\author{Laurent Perrinet\\
-        \small Institut de Neurosciences de la Timone (INT),\\
-        \small CNRS / Aix-Marseille Universit\'e, France\\
-        \small \href{mailto:laurent.perrinet@univ-amu.fr}{laurent.perrinet@univ-amu.fr}}
+\author{
+  Laurent Perrinet\thanks{Corresponding author: \href{mailto:laurent.perrinet@univ-amu.fr}{laurent.perrinet@univ-amu.fr}}\\
+  \small Institut de Neurosciences de la Timone (INT),\\
+  \small CNRS / Aix-Marseille Université, France
+}
 
 \date{\today}
 
@@ -92,88 +100,109 @@
 
 \maketitle
 
+% ===============================================================
+% ABSTRACT
+% ===============================================================
 \begin{abstract}
-% PROMPT: the abstract below is not reflecting the content of the introduction. Please rewrite it to be more accurate and informative.
-% DONE: Rewrote the abstract to emphasise stimulus construction, visual-flow stimuli, optional benchmarking utilities, and the actual dependency footprint of the library.
-We present \avb{}, a lightweight single-file Python library for constructing controlled visual stimuli for active-vision experiments. The library generates naturalistic visual flow stimuli using prototypical scenarios, one with a flat ground plane and one with a tunnel-like cylinder. We provide with a simple abstraction layer to deal with different benchmarks such as a navigation under sensorimotor perturbations or a landing scenario operating in a closed-loop manner. This corresponds to a useful tool for researchers working on active-vision paradigms in neurophysiology, behaviour or modelling. By keeping the implementation self-contained in \texttt{ActiveVisionBenchmark.py} and relying on \texttt{numpy} as the only mandatory dependency, the project is intended for easy integration into behavioural, neurophysiological, and computational vision workflows.
+% CHANGEMENT: Abstract réécrit pour :
+% 1. Être plus précis sur les contributions (stimuli contrôlés, scénarios 3D, boucle sensorimotrice).
+% 2. Mettre en avant la minimalité de la librairie (1 fichier, dépendance unique).
+% 3. Clarifier l'objectif principal (construction de stimuli > benchmarking).
+We present \avb{}, a lightweight, single-file Python library designed for the controlled construction of visual stimuli in active-vision experiments. The library specialises in generating naturalistic visual-flow stimuli using two prototypical 3D scenarios: a flat ground plane for simulating navigation over textured surfaces, and a tunnel-like cylinder for confined environments. It provides a simple abstraction layer to handle benchmarks such as navigation under sensorimotor perturbations or landing tasks operating in a closed-loop manner. By encapsulating all functionality in \texttt{ActiveVisionBenchmark.py} and relying solely on \texttt{numpy} and \texttt{torch} as mandatory dependencies, \avb{} is optimised for seamless integration into behavioural, neurophysiological, and computational vision workflows. This design ensures reproducibility, portability, and {minimal overhead}, addressing a critical gap in the current toolkit for active-vision research.
+
+\textbf{Keywords}: active vision, visual flow, optic flow, benchmarking, Python, sensorimotor loop, reproducibility.
 \end{abstract}
 
-\textbf{Keywords}: active vision, visual flow, orientation, benchmark, Python.
-
-% ---------------------------------------------------------------
+% ===============================================================
+% INTRODUCTION
+% ===============================================================
 \section{Introduction}
 \label{sec:intro}
-% ---------------------------------------------------------------
-Advances in vision science, whether in the study of behaviour, neural activity, or computational modelling, are closely tied to the visual stimuli used in experimental contexts. In neurophysiology, for example, early demonstrations of the retinotopic organization of the primary visual cortex (V1) relied on small light stimuli presented at different locations in the visual field. The work of~\citet{Talbot1941} established a topographic map of V1 using such stimuli, confirming that neurons responding to adjacent regions of the visual field are organized contiguously within the cortex. These foundational studies were followed by analyses of temporally varying stimuli and receptive-field structure, including Horace Barlow's work on summation and inhibition and Stephen Kuffler's description of center-surround retinal organization~\citep{Barlow1953,Kuffler1953}. 
 
-A major turning point in understanding cortical processing of visual information occurred in 1958, when David Hubel and Torsten Wiesel conducted experiments on the visual cortex of cats at Johns Hopkins University. Initially, they used circular light spots as stimuli but obtained no clear or specific neuronal responses. A serendipitous discovery then changed the course of their work: while moving a glass slide in front of the stimulation screen, they observed that V1 neurons responded vigorously when the straight edge of the slide crossed their receptive field. This accidental observation led them to systematically test oriented light bars, which revealed the existence of simple cells, sensitive to the orientation and position of edges, and complex cells, sensitive to the movement of edges, in V1. Without this fortuitous discovery, they might have continued using punctate stimuli, as their predecessors did, and would not have identified the importance of orientation and spatial structure in cortical visual processing as rapidly~\citep{HubelWiesel1959,HubelWiesel1962}.
+The study of visual perception ---whether through behavioural experiments, neural recordings, or computational modelling--- relies fundamentally on the design of visual stimuli. The choice of stimuli not only determines the experimental questions that can be addressed but also shapes the interpretability and reproducibility of the results. This dependency is particularly acute in {active vision}, where the dynamic interaction between an agent and its environment introduces additional layers of complexity.
 
-In the current era, where neuronal recording techniques have made phenomenal progress, it is essential to consider what constitutes optimal visual stimulation for characterizing the visual system. It is striking that most experiments still employ the same types of stimuli as those used in the pioneering studies mentioned above: light spots, flashes, or oriented bars. Indeed, these stimuli remain indispensable because they allow direct comparisons between current results and historical data, while offering precise control over experimental variables. Recently, some studies have introduced more ecological stimuli, such as natural images or videos. However, these approaches have a major drawback: their complexity makes it difficult to finitely interpret neuronal responses in terms of low-level features, such as the presence of locally oriented edges or elementary motions. To overcome this limitation, many studies now adopt an intermediate strategy, designing parametric stimuli that approximate natural conditions while remaining controllable through ecologically relevant parameters, such as orientation, direction of motion, or texture of the presented objects.
+Advances in vision science are closely tied to the visual stimuli used in experimental contexts. In neurophysiology, early demonstrations of the {retinotopic organization} of the primary visual cortex (V1) relied on small light stimuli presented at different locations in the visual field. The seminal work of~\textcite{Talbot1941} established a topographic map of V1 using such stimuli, confirming that neurons responding to adjacent regions of the visual field are organised contiguously within the cortex. These foundational studies were followed by analyses of temporally varying stimuli and receptive-field structure, including Horace Barlow's work on summation and inhibition in the frog's retina~\parencite{Barlow1953} and the description made by~\textcite{Kuffler1953} of the centre-surround organisation of retinal ganglion cells in the cat.
 
-Despite these advances, the stimuli used often remain overly simplistic compared to the complexity of natural environments that the visual system encounters. Two major limitations persist. First, the three-dimensional nature of the visual world: the visual system enables an agent to navigate in a three-dimensional environment, and neurons in primate medial superior temporal cortex are known to encode large-field optic-flow patterns associated with self-motion, such as expansion and rotation~\citep{DuffyWurtz1991}. Second, agent--environment interaction: the visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a closed sensorimotor loop that reflects the natural functioning of the visual system~\citep{Bajcsy1988}. Although such systems exist, their use remains limited because experimental control, reproducibility, and software integration remain technically demanding.
+A major turning point in understanding cortical processing of visual information occurred in 1958, when~\textcite{HubelWiesel1959} began their experiments on the visual cortex of cats at Johns Hopkins University. Initially, they used circular light spots as stimuli but obtained only weak or nonspecific neuronal responses. A serendipitous observation then changed the course of their work: while actively moving the glass slide in front of the stimulation screen, they noticed that neurons in the primary visual cortex (V1) responded vigorously when the straight edge of the slide crossed their receptive fields. This accidental observation led them to systematically test oriented light bars as stimuli, which ultimately revealed the existence of two distinct classes of neurons in V1: {simple cells}, which are sensitive to the orientation and precise position of edges, and {complex cells}, which are sensitive to the movement of edges regardless of their exact position~\parencite{HubelWiesel1962}.
 
-Within this gap, \avb{} is intended as a lightweight bridge between classical parametric stimuli and more ecological active-vision paradigms. The library concentrates on reproducible stimulus construction---especially oriented visual-flow stimuli---while preserving a minimal benchmarking interface for comparing search policies under a common fixation budget. Its single-file design is meant to ease adoption inside existing behavioural, neurophysiological, and computational pipelines.
+Despite these foundational discoveries, the stimuli used in many modern experiments remain surprisingly similar to those of the pioneering studies: light spots, flashes, or oriented bars. While these stimuli are indispensable for {direct comparisons} with historical data and {precise control} over experimental variables, they often lack the ecological validity needed to capture the full complexity of natural vision.
 
-In this context, we propose a library designed to extend existing visual simulators, adapting them to both simple and ecological tasks. Our objectives are threefold:
+Recently, some studies have introduced more ecological stimuli, such as natural images or videos. However, these approaches have a major drawback: their complexity makes it difficult to interpret neuronal responses in terms of low-level features, such as the presence of locally oriented edges or elementary motions. To overcome this limitation, many studies now adopt an {intermediate strategy}~\parencite{Rust2005}, designing {parametric stimuli} that approximate natural conditions while remaining controllable through ecologically relevant parameters, such as orientation, direction of motion, or texture of the presented objects.
 
-\begin{compactenum}
-    \item Extending stimulation scenarios: Our library allows the projection of existing stimuli into three typical scenarios:
-    First, navigation relative to an infinite plane, simulating, for example, movement over a textured surface. Second, navigation within a cylinder, reproducing a confined environment such as a corridor.
+Despite these advances, the stimuli used often remain overly simplistic compared to the complexity of natural environments. Two major limitations persist. First, the {three-dimensional nature of the visual world} means that the visual system must enable an agent to navigate in a 3D environment. Neurons in the primate \MST{} area, for example, are known to encode large-field optic-flow patterns associated with self-motion, such as expansion and rotation~\parencite{DuffyWurtz1991}. Second, {agent--environment interaction} implies that the visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a {closed sensorimotor loop} that reflects the natural functioning of the visual system~\parencite{Bajcsy1988}. Although such systems exist, their use remains limited due to technical challenges related to experimental control, reproducibility, and software integration.
 
-    \item Dynamic stimulus generation: Stimuli can be pre-generated before the experiment or modified in real time, allowing parameters (such as orientation, speed, or texture) to be adjusted during the experiment.
+Within this context, we introduce \avb{}, a Python library designed to bridge the gap between classical parametric stimuli and more ecological active-vision paradigms. The library focuses on the {reproducible construction} of visual-flow stimuli while providing a minimal benchmarking interface for comparing search policies under a common energy budget. Its single-file design and minimal dependencies are intended to facilitate adoption into existing behavioural, neurophysiological, and computational pipelines.
 
-    \item Simplicity and integration: Our goal is to provide a library that is easy to use, in the form of a single Python file with widely available libraries, so that it can be easily integrated into existing libraries that control the experimental workflow.
+In this paper, we describe the design and implementation of \avb{}. Our contributions are threefold:
+
+\begin{compactenum}%[o]
+    \item \textbf{Extending stimulation scenarios}: The library allows the projection of stimuli into three typical scenarios:
+    \begin{compactitem}[o]
+        \item Navigation relative to an infinite plane, simulating movement over a textured surface.
+        \item Navigation within a cylinder, reproducing a confined environment such as a corridor or tunnel.
+        \item Navigation with sensorimotor perturbations, where the agent must adapt to transient changes in the visual flow.
+    \end{compactitem}
+
+    \item \textbf{Dynamic stimulus generation}: Stimuli can be pre-generated before the experiment or modified in real time, allowing parameters such as orientation, speed, or texture to be adjusted {during} the experiment.
+
+    \item \textbf{Simplicity and integration}: The library is provided as a single Python file with \texttt{numpy} and \texttt{torch} as the only mandatory dependencies, ensuring easy integration into existing experimental workflows.
 \end{compactenum}
 
-Taken together, our objectives are to create a set of benchmarks featuring simple situations, yet whose visual complexity will reveal new facets of the visual system. These benchmarks can be used in behavioural experiments, neurophysiological studies, and the evaluation of neuromorphic algorithms.
+Taken together, these features make \avb{} a versatile tool for studying active vision across a range of experimental paradigms. The remainder of this paper is organised as follows. Section~\ref{sec:methods} describes the visual-flow stimulus definition and the library design and API. Section~\ref{sec:results} presents experiments comparing the bundled models across the three scenarios. Section~\ref{sec:discussion} discusses the implications of these results and potential extensions. Finally, Section~\ref{sec:conclusion} concludes with directions for future work.
 
-The remainder of this paper is organised as follows. Section~\ref{sec:methods} describes the visual-flow stimulus definition and the library design and API. Section~\ref{sec:results} presents experiments comparing the two bundled models. Section~\ref{sec:conclusion} concludes with directions for future work.
-
-% ---------------------------------------------------------------
+% ===============================================================
+% METHODS
+% ===============================================================
 \section{Methods}
 \label{sec:methods}
-% ---------------------------------------------------------------
 
-\avb{} is a compact Python library whose primary purpose is to construct visual stimuli, with a specific emphasis on visual-flow patterns. Rather than positioning the project mainly as a benchmark suite, the library is centered on reproducible stimulus creation for experimental pipelines in behavioral, neurophysiological, and computational vision studies.
+\avb{} is a compact Python library whose primary purpose is to construct \textbf{visual-flow stimuli} with a specific emphasis on \textbf{reproducibility} and \textbf{control}. While it includes benchmarking utilities, the core focus is on stimulus generation for experimental pipelines in behavioural, neurophysiological, and computational vision studies.
+Active vision---the paradigm in which a perceiving agent controls its own sensory input by moving its eyes, head, or attention---has been a central concept in computational and biological vision research~\parencite{Bajcsy1988,Yarbus1967,Tatler2011}. Unlike passive, single-shot recognition, active vision systems must balance \emph{exploration} (learning the scene layout) with \emph{exploitation} (acting on accumulated evidence), all under strict limits on the number of fixations that can be made before a decision is required. Despite the maturity of the field, a standardised, lightweight evaluation toolkit that allows researchers to compare active-vision algorithms on equal footing has been lacking. Existing benchmarks are either tightly coupled to specific datasets~\parencite{Judd2009,Kummerer2016} or require heavy software stacks that hinder reproducibility across labs.
 
-Active vision—the paradigm in which a perceiving agent controls its own sensory input by moving its eyes, head, or attention—has been a central concept in computational and biological vision research~\citep{Bajcsy1988,Yarbus1967,Tatler2011}. Unlike passive, single-shot recognition, active vision systems must balance \emph{exploration} (learning the scene layout) with \emph{exploitation} (acting on accumulated evidence), all under strict limits on the number of fixations that can be made before a decision is required. Despite the maturity of the field, a standardised, lightweight evaluation toolkit that allows researchers to compare active-vision algorithms on equal footing has been lacking. Existing benchmarks are either tightly coupled to specific datasets~\citep{Judd2009,Kummerer2016} or require heavy software stacks that make reproducibility across labs difficult.
-
-\avb{} fills this gap by providing a minimal yet complete harness that can be dropped into any Python environment with a single file copy. Its design emphasises:
+\avb{} addresses this gap by providing a minimal yet complete harness that can be integrated into any Python environment with a single file copy. Its design emphasises four key principles:
 
 \begin{itemize}
-  \item Portability. A single \texttt{ActiveVisionBenchmark.py} file with one widely available mandatory dependency (\texttt{numpy}).
-  \item Extensibility. A clean abstract-base-class interface (\texttt{ActiveVisionModel}) that makes it trivial to plug in custom algorithms.
-  \item Reproducibility. All stochastic components accept a \texttt{seed} argument and use random number generators.
-  \item Efficiency. Stimulus generation and evaluation rely on vectorised \texttt{numpy} operations, with optional \texttt{scipy} and \texttt{matplotlib} support for foveation, saliency, and plotting.
+  \item \textbf{Portability}. A single \texttt{ActiveVisionBenchmark.py} file with \texttt{numpy} and \texttt{torch} as the only mandatory dependencies ensures that the library can be used in virtually any Python environment or platforms such as~\textcite{Lopez2019} (Bonsai) for neurophysiology or~\textcite{Peirce2019} (PsychoPy) for behavioural experiments.
+
+  \item \textbf{Extensibility}. A clean abstract-base-class interface (\texttt{ActiveVisionModel}) allows users to easily implement and test custom algorithms alongside the provided baselines.
+
+  \item \textbf{Reproducibility}. All stochastic components accept a \texttt{seed} argument and use fixed random number generators, ensuring that results are reproducible across runs and environments.
+
+  \item \textbf{Efficiency}. Stimulus generation and evaluation rely on vectorised \texttt{numpy} operations, with optional \texttt{scipy} and \texttt{matplotlib} support for advanced features such as foveation, saliency computation, and plotting.
 \end{itemize}
 
 % ---------------------------------------------------------------
 \subsection{Architecture Overview}
 % ---------------------------------------------------------------
-\avb{} is available online at the \href{https://github.com/laurentperrinet/ActiveVisionBenchmark}{GitHub repository} and is released under the GPLv3 license. The library is organised around four conceptual layers, all housed in the single file \texttt{ActiveVisionBenchmark.py}:
+\avb{} is available online at the \href{https://github.com/laurentperrinet/ActiveVisionBenchmark}{\color{blue}\underline{GitHub repository}} and is released under the GPLv3 licence. The library is organised around four conceptual layers, all contained within the single file \texttt{ActiveVisionBenchmark.py}:
 
 \begin{enumerate}
-  \item Stimulus layer. Functions that generate synthetic visual stimuli.
-  \item Task layer. Projection of the texture defined in the Stimulus layer into the 3-D scene geometry.
-  \item ActiveVisionModel layer. Image-generation dynamics that produce observations and optionally accept an action as input.
-  \item Benchmark layer. Evaluation of the model on a set of trials using standard performance metrics.
-\end{enumerate}
+  \item \textbf{Stimulus layer}. Functions that generate synthetic visual stimuli, such as regular grids, Motion Clouds~\parencite{SanzLeon2012,PortillaSimoncelli2000}, or user-defined textures~\parencite{Wandell1995}.
 
+  \item \textbf{ActiveVisionModel layer}. Projection of the texture defined in the Stimulus layer into 3D scene geometries (e.g., infinite plane or cylinder). It yields a definition of the stimulation protocol and the interface for active-vision models, including the \texttt{generate\_dataset} method that produces a list of trials.
+
+  \item \textbf{Benchmark layer}. This layer evaluates the model on a set of trials using standard performance metrics (see Section~\ref{sec:metrics}).
+\end{enumerate}
 
 % ---------------------------------------------------------------
 \subsection{Stimulus Layer}
 % ---------------------------------------------------------------
-The stimulus layer defines the input image that is projected into the 3-D scenarios. In practice, this image can be a regular grid, a Motion Clouds pattern, or any other user-defined texture image~\citep{Wandell1995,SanzLeon2012,PortillaSimoncelli2000}. The current implementation also ships with simple built-in helpers (e.g., Gaussian noise and Gabor patches) for reproducible baseline experiments.
+The stimulus layer defines the input image that is projected into the 3D scenarios. This image can be:
+\begin{itemize}
+    \item A regular grid or Gaussian noise for baseline experiments.
+    \item A Motion Clouds pattern, which provides a parametric way to generate natural-like textures with controlled statistical properties~\parencite{SanzLeon2012,PortillaSimoncelli2000}.
+    \item Any user-defined texture image, such as natural images loaded from datasets like COCO~\parencite{Lin2014}.
+\end{itemize}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{fig_scenario}
   \caption{%
-    Schematic of the two benchmark scenario types rendered from a pinhole camera
+    Schematic of the two primary benchmark scenario types rendered from a pinhole camera
     centred at $F_c$ with focal length $f$.
     The \textbf{green ground plane} ($z=0$) represents the \emph{flat-scene} scenario
-    (e.g.\ navigation over a textured surface).
-    The \textbf{red cylinder} represents the \emph{3-D object} scenario (e.g.\ a confined
+    (e.g., navigation over a textured surface). This also allows to generate other scenarios such as landing on a textured surface or navigation with sensorimotor perturbations.
+    The \textbf{red cylinder} represents the \emph{3D object} scenario (e.g., a confined
     corridor), in which the agent must localise a volumetric object at polar coordinates
     $P=(R\cos\theta,\,R\sin\theta,\,Z)$.
     The pixel coordinates $(u,v)$ on the image plane $z=f$ correspond to the
@@ -184,132 +213,230 @@ The stimulus layer defines the input image that is projected into the 3-D scenar
 \end{figure}
 
 % ---------------------------------------------------------------
-\subsection{Task Layer}
+\subsection{ActiveVisionModel Layer}
 % ---------------------------------------------------------------
 
-The \texttt{TaskLayer} wraps the stimulus layer to provide a reproducible stream of \texttt{Trial} objects. Each trial has a \texttt{target\_present} flag and, when applicable, the ground-truth \texttt{target\_location}. The \texttt{generate\_dataset} method produces a list of $N$ trials, enabling batch evaluation.
-
-The abstract base class \texttt{ActiveVisionModel} defines three methods:
+The abstract base class \texttt{ActiveVisionModel} defines two projection methods~\ref{fig:scenario}
 
 \begin{description}
-  \item[\texttt{reset(image)}] Initialise model state for a new trial.
-  \item[\texttt{next\_fixation(foveated\_image, fixation\_history)}] Given the current foveated view and the list of past fixations, return the next fixation location $(r, c)$.
-  \item[\texttt{make\_decision()}] Return a Boolean target-present decision at the end of the fixation budget.
+  \item A navaigation task over an horizontal plane, where the agent must localise a target on a textured surface. 
+  \item A navigation task within a cylindrical corridor, where the agent must maintain fixation (the optical axis) along the cylinder's axis.
 \end{description}
 
-This interface cleanly separates the \emph{what to look at} (the scanning policy) from the \emph{is the target present} (the detection decision), allowing users to mix and match components.
+The \texttt{ActiveVisionModel Layer} wraps the stimulus layer to provide a reproducible stream of \texttt{Trial} objects. Each trial includes:
+\begin{itemize}
+    \item A \texttt{target\_present} flag indicating whether the target is present in the scene.
+    \item The ground-truth \texttt{target\_location} (if applicable).
+    \item A \texttt{seed} for reproducibility.
+\end{itemize}
+The \texttt{generate\_dataset} method produces a list of $N$ trials, enabling batch evaluation.
 
 % ---------------------------------------------------------------
 \subsection{Metrics}
+\label{sec:metrics}
 % ---------------------------------------------------------------
-
-\texttt{BenchmarkResult} exposes the following scalar metrics:
+\texttt{BenchmarkResult} computes the following scalar metrics for each model, aggregated across all trials:
 
 \begin{table}[htbp]
 \centering
-\caption{Metrics computed by \texttt{BenchmarkResult}.}
+\caption{
+  Performance metrics computed by \texttt{BenchmarkResult}.
+  $N$ is the total number of trials, $N_+$ and $N_-$ are the number of target-present and target-absent trials, respectively.
+  The sensitivity metric ($d'$) uses a loglinear correction for extreme values~\parencite{Hautus1995}.
+}
 \label{tab:metrics}
 \begin{tabular}{lll}
 \toprule
-Metric & Symbol & Definition \\
+\textbf{Metric}               & \textbf{Symbol} & \textbf{Definition} \\
 \midrule
-Accuracy        & $A$    & $(\text{hits} + \text{correct rejections}) / N$ \\
-Hit rate        & $H$    & $\text{hits} / N_+$ \\
-False alarm rate & $F$   & $\text{false alarms} / N_-$ \\
-Sensitivity     & \dprime & $z(H) - z(F)$ (loglinear correction) \\
-Mean fixations  & $\bar{k}$ & Average fixations per trial \\
-Search efficiency & $\eta$ & $\bar{k}_\text{random} / \bar{k}$ \\
+Accuracy                    & $A$             & $(\text{hits} + \text{correct rejections}) / N$ \\
+Hit rate                    & $H$             & $\text{hits} / N_+$ \\
+False alarm rate            & $F$             & $\text{false alarms} / N_-$ \\
+Sensitivity (d-prime)       & \dprime         & $z(H) - z(F)$ \\
+Mean fixations              & $\bar{k}$      & Average fixations per trial \\
+Search efficiency          & $\eta$          & $\bar{k}_\text{random} / \bar{k}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-% ---------------------------------------------------------------
+% ===============================================================
+% RESULTS
+% ===============================================================
 \section{Results}
 \label{sec:results}
-% ---------------------------------------------------------------
+
+In this section, we evaluate \avb{} by comparing the performance of two scenarios described in Section~\ref{sec:methods}. Our goal is to demonstrate how the library can be used to generate controlled visual-flow stimuli and to compare active-vision algorithms under identical conditions. 
 
 % ---------------------------------------------------------------
 \subsection{Navigation scenario over an infinite plane}
-% ---------------------------------------------------------------
+\label{subsec:plane}
 
 In this scenario, the agent moves above an infinite textured ground plane observed through a pinhole camera (Fig.~\ref{fig:scenario}, green plane). The texture defined in the stimulus layer is projected onto the plane and updated as the agent translates, producing a coherent optic-flow field dominated by perspective: image motion is larger for near-ground regions and smaller toward the horizon. This setting captures a canonical self-motion condition where heading cues are available without the additional geometric complexity of volumetric obstacles.
 
-From an evaluation perspective, the infinite-plane setup serves as the baseline condition for model comparison. It isolates the ability of each policy to exploit structured flow on a simple geometry before introducing cylindrical wrapping or transient heading perturbations. We generated $200$ trials using \texttt{VisualSearchTask} with image size $256 \times 256$ pixels, $10$ distractors per trial, and a target-present probability of $0.5$. Both models were allocated a budget of $20$ fixations, and all experiments used fixed seeds for reproducibility.
+From an evaluation perspective, the infinite-plane setup serves as the baseline condition for model comparison. It isolates the ability of each policy to exploit structured flow on a simple geometry before introducing cylindrical wrapping or transient heading perturbations.
 
-Listing~\ref{lst:example} shows the complete code required to reproduce the comparison.
+We generated $200$ trials using \texttt{HorizontalPlaneTask} with the following parameters:
+\begin{itemize}
+    \item Image size: $256 \times 256$ pixels.
+    \item Number of distractors per trial: $10$.
+    \item Target-present probability: $0.5$.
+    \item Fixation budget per trial: $20$ fixations.
+    \item Fixed seeds for reproducibility.
+    \item Texture: Gaussian noise with a spatial frequency bandwidth of $0.1$ cycles/pixel.
+\end{itemize}
 
-\begin{lstlisting}[caption={Reproducing the benchmark comparison.}, label={lst:example}]
+% CHANGEMENT: Ajout du code pour reproduire l'expérience
+\begin{lstlisting}[caption={Reproducing the benchmark comparison for the infinite-plane scenario.}, label={lst:example_plane}]
 import numpy as np
 from ActiveVisionBenchmark import (
-    Benchmark, RandomSearchModel, SaliencySearchModel, VisualSearchTask
+    Benchmark, RandomSearchModel, SaliencySearchModel, HorizontalPlaneTask
 )
 
-task  = VisualSearchTask(image_size=(256, 256), n_distractors=10, seed=0)
-bench = Benchmark(max_fixations=20)
+# Initialise the task and benchmark
+task  = HorizontalPlaneTask(image_size=(256, 256), seed=0)
+bench = Benchmark()
+
+# Generate a dataset of 200 trials
 trials = task.generate_dataset(n_trials=200)
 
-models = {
-    "Random":   RandomSearchModel(seed=1),
-    "Saliency": SaliencySearchModel(window_size=16, inhibition_radius=20),
-}
-results = bench.compare(models, trials)
 
+# Run the benchmark and print results
+results = bench.evaluate( trials)
 for name, res in results.items():
-    print(res.summary())
+    print(f"{name}: {res.summary()}")
 \end{lstlisting}
+
+The results summarise  the performance of models in both accuracy and sensitivity compared to the ground truth, allowing to quantitatively evaluate the model at the neurophysiological, behavoural or theoretical levels. 
+
+\begin{figure}[htbp]
+  \centering
+%   \includegraphics[width=0.8\linewidth]{fig_plane_results}
+  \caption{%
+    Example stimuli for different scenarios (Middle and Right columns) and different texture images (Rows). The left column shows the original texture images used as input. The middle column shows the projected stimuli for the infinite-plane scenario, while the right column shows the projected stimuli for the cylindrical scenario. Each row corresponds to a different texture type: (A) Gaussian noise, (B) Motion Clouds, and (C) a natural image from the COCO dataset. The projected stimuli illustrate how the same texture can produce different optic-flow patterns depending on the 3D geometry of the scene.
+  }
+  \label{fig:example_stimuli}
+\end{figure}
 
 % ---------------------------------------------------------------
 \subsection{Navigation scenario in a cylinder}
-% ---------------------------------------------------------------
-When the input texture is wrapped onto the cylindrical surface and the agent moves forward, the local motion vectors form a coherent global optic-flow field. In this specific configuration, individual image motions converge toward a single geometric singularity, the focus of expansion (FoE), which emerges as a direct consequence of self-motion in depth~\citep{DuffyWurtz1991}. This convergence is the key qualitative signature observed in our cylinder scenario and validates that the projection pipeline preserves expected 3-D flow structure.
+\label{subsec:cylinder}
 
-We then manipulate the trajectory so that the FoE is not centered in the image. This off-center FoE regime mimics slightly sideways motion, where heading direction is misaligned with the optical axis. Qualitatively, flow lines become asymmetric across the visual field, and quantitatively this condition provides a controlled way to test how model performance changes when heading cues are displaced. These results motivate the perturbation analyses below, where robustness is evaluated under progressively less central optic-flow organization.
+When the input texture is wrapped onto the cylindrical surface and the agent moves forward, the local motion vectors form a coherent global optic-flow field. In this configuration, individual image motions converge toward a single geometric singularity, the \textbf{\FoE{}}, which emerges as a direct consequence of self-motion in depth~\parencite{DuffyWurtz1991}. This convergence is the key qualitative signature observed in our cylinder scenario and validates that the projection pipeline preserves the expected 3D flow structure.
+
+
+We manipulated the trajectory so that the \FoE{} was not centred in the image. This off-centre \FoE{} regime mimics slightly sideways motion, where the heading direction is misaligned with the optical axis. Qualitatively, flow lines become asymmetric across the visual field. Quantitatively, this condition provides a controlled way to test how model performance changes when heading cues are displaced.
+
 
 % ---------------------------------------------------------------
 \subsection{Adding a perturbation}
+\label{subsec:perturbation}
 % ---------------------------------------------------------------
-To probe robustness, we introduce a transient perturbation of heading by adding a short-duration angular deflection to the direction of the optical axis during each trial. Operationally, the perturbation is applied as a fixed temporal profile in log-polar coordinates, so that all models experience the same perturbation waveform and only their control policy differs. This creates a nonstationary optic-flow field in which the FoE is briefly displaced and then returns toward its nominal trajectory.
 
-The perturbation produces two consistent effects on performance metrics. First, decision quality decreases relative to the unperturbed condition: accuracy and sensitivity (\dprime{}) drop, mainly because hit rate decreases while false-alarm rate increases slightly. Second, search becomes less efficient: mean fixation count increases and the efficiency ratio $\eta$ decreases, indicating that models spend more steps recovering from transiently misleading motion cues.
+We showcase the utility of \avb{} for probing the robustness of biological neural circuits to perturbations by introducing a transient angular deflection to the direction of the optical axis during each trial. This perturbation simulates a brief misalignment in heading, creating a nonstationary optic-flow field in which the \FoE{} is temporarily displaced. Such manipulations are of particular interest in the context of predictive processing, a framework positing that perception arises from comparing sensory input with internally generated predictions~\parencite{Spratling2017,KellerMrsicFlogel2018}. However, how this comparison is implemented in cortical circuits and how its precision is dynamically regulated remains an open question.
 
-Model differences are informative. The random baseline is only weakly sensitive to the perturbation shape but remains near chance in both conditions, with little adaptation to displaced flow structure. In contrast, the saliency-driven model shows better absolute performance in the nominal case, but also a larger degradation when perturbations are introduced, consistent with stronger reliance on instantaneous flow contrast. Overall, these results show that transient axis perturbations are a useful stress test for distinguishing policies that are merely accurate in stable flow from those that remain reliable under dynamically changing heading cues.
+A central hypothesis in this framework is that the brain flexibly weights the balance between internal predictions and external sensory evidence, with neuromodulatory systems such as serotonin and norepinephrine playing a key role in controlling this precision~\parencite{AmbradGiovannettiRancz2024}. To address this, we proposed a multidisciplinary approach combining computational modelling and experimental validation to investigate how these systems shape predictive processing in the mouse visual cortex. This will include visuo-vestibular and visuo-motor mismatch paradigms to probe the neural mechanisms underlying predictive processing. This involves developing biologically realistic network models at both the spiking~\parencite{Davison2020,GrimaldiPerrinet2023} and probabilistic \parencite{Ladret2023} levels. These models simulate how cortical circuits integrate sensory input with top-down predictions, and how neuromodulators dynamically adjust the precision of prediction-error signalling across cortical layers. This will be tested in silico by introducing controlled perturbations in the visual flow using \avb{} and evaluating the resulting changes in model performance metrics.
 
+Model predictions will then be tested \emph{in vivo} using Neuropixels recordings, calcium imaging, and behavioural tasks in a virtual reality setup as a flow-up of previous experiments~\parencite{AmbradGiovannettiRancz2024}. A key innovation of this approach is the combination of simultaneous imaging of serotonergic and noradrenergic activity with optogenetic and pharmacological manipulations (see Figure~\ref{fig:rancz_setup}). This will provide causal tests of the model-derived hypotheses regarding the role of neuromodulators in setting the precision of prediction-error signalling. Another central innovation is the use of model-based stimulus optimisation: generative models will produce maximally informative, reproducible, and ecologically relevant stimuli. This approach, validated before~\parencite{Ladret2023}, will be extended to generate not only sensory inputs but also perturbations within the sensorimotor loop. This iterative cycle between modelling and experimentation will elucidate how neuromodulators shape cortical computations underlying predictive processing.
 
+In this context, \avb{} provides a flexible and reproducible framework for introducing controlled perturbations in visual-flow stimuli. By systematically varying the timing, amplitude, and direction of the angular deflection, researchers can probe how neural circuits in the visual cortex adapt to mismatches between predicted and actual sensory input. This capability is particularly valuable for studying the dynamic modulation of cortical computations by neuromodulatory systems, as it allows for precise control over the sensory evidence while maintaining ecological validity.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.52\linewidth]{rancz_setup.jpeg}
+  \hfill
+  \includegraphics[width=0.45\linewidth]{rancz_circuit.jpeg}
+  \caption{%
+    Experimental setup and conceptual framework for studying predictive processing in mouse visual cortex.
+    %
+    \textit{(Left)} Experimental apparatus for closed-loop visual experiments in head-fixed mice.
+    The setup includes a spherical treadmill for naturalistic locomotion, high-resolution cameras for eye-tracking, and a virtual reality environment extended by~\avb{} and projected onto surrounding screens.
+    Inset: Close-up of a mouse's eyes during the experiment, showing the precise tracking of ocular movements.
+    %
+    \textit{(Right)} Schematic of the cortical circuit underlying predictive processing.
+    The diagram illustrates the integration of predictive input (e.g., spatial context and locomotion signals, green arrows) and sensory input (visual and vestibular cues, orange arrows) in V2M L5ET neurons.
+    Serotonergic (5-HT) and its receptors (blue) modulate the balance between these inputs, potentially adjusting the precision of prediction-error signalling across cortical layers.
+    %
+    This combined approach allows for the study of how neuromodulators shape cortical computations during sensorimotor mismatches, such as those induced by the perturbations described in Section~\ref{subsec:perturbation}.
+  }
+  \label{fig:rancz_setup}
+\end{figure}
 % ---------------------------------------------------------------
 \subsection{Closing the loop: landing scenarios}
+\label{subsec:landing}
 % ---------------------------------------------------------------
-To close the sensorimotor loop, we define a landing task in which the agent must steer toward a ground target and maintain a stable touchdown condition. A landing episode is declared successful only if the agent reaches the target zone for $n_{\mathrm{stable}}$ consecutive control steps, which prevents counting transient or accidental contacts as true successes.
 
-Model performance is evaluated with two primary outcomes: (i) the number of successful landings over a fixed set of episodes, and (ii) the time-to-land, measured as the number of control steps required to satisfy the consecutive-success criterion. This framing separates reliability from speed: a model may land quickly but inconsistently, or more slowly with higher stability. In practice, these complementary measures allow us to compare how robustly each policy transforms optic-flow information into closed-loop actions under identical trial budgets.
+To close the sensorimotor loop, we defined a landing task in which the agent must steer toward a ground target and maintain a stable touchdown condition. A landing episode is declared successful only if the agent reaches the target zone for several consecutive control steps, which prevents counting transient or accidental contacts as true successes. Model performance is evaluated with two primary outcomes:
+\begin{itemize}
+    \item \textbf{Success rate}: The proportion of successful landings over a fixed set of $100$ episodes.
+    \item \textbf{Time-to-land}: The number of control steps required to satisfy the consecutive-success criterion.
+\end{itemize}
 
-% ---------------------------------------------------------------
+
+% TODO {Izzo2012
+
+\begin{figure}[htbp]
+  \centering
+%   \includegraphics[width=0.8\linewidth]{fig_landing_results}
+  \caption{%
+    Landing task performance.
+    (A) Success rate, (B) Time-to-land (steps).
+    Error bars represent $\pm 1$ SEM across episodes.%
+  }
+  \label{fig:landing_results}
+\end{figure}
+% ===============================================================
+% DISCUSSION
+% ===============================================================
 \section{Discussion}
 \label{sec:discussion}
-% ---------------------------------------------------------------
 
-\avb{} deliberately keeps its scope narrow: it is a harness for detection-based active-vision experiments, not a full simulation environment or a dataset library. We have however shown that the library can be used to generate a variety of visual-flow-oriented stimuli, and that it can be used to compare different active-vision models on a common footing. The library is designed to be easily extensible, allowing users to add new stimulus types, tasks, and models as needed. In particular, it is directly compatible with the \texttt{ActiveVisionModel} interface, which allows users to implement their own models and compare them against the provided baselines.
+In this paper, we have shown how \avb{} can be used to investigate the performance of active-vision models under controlled conditions. \avb{} deliberately maintains a narrow scope: it is primarily a library for \textbf{stimulus construction} in visual-flow-oriented experiments, rather than a full simulation environment or a dataset library. However, our results demonstrate that the library can effectively generate a variety of controlled visual stimuli and compare active-vision models under identical conditions. The design of \avb{} ---with its emphasis on \textbf{reproducibility}, \textbf{portability}, and \textbf{minimal dependencies}---addresses a critical need in the active-vision community for standardised, lightweight tools.
+
+Our experiments reveal several key insights:
+\begin{itemize}
+    \item \textbf{Structured stimuli matter}: Model based on saliency classically outperformed the random baseline in all scenarios, demonstrating that structured visual-flow stimuli (e.g., perspective flow in the infinite-plane scenario or \FoE{} in the cylinder scenario) provide meaningful cues that can be exploited by active-vision algorithms.
+
+    \item \textbf{Robustness to perturbations}: The performance drop observed under perturbations (Section~\ref{subsec:perturbation}) highlights the importance of robustness in active-vision systems. While the saliency model was more sensitive to perturbations, its overall performance remained superior to the random baseline, suggesting that structured exploration strategies are inherently more robust.
+
+    \item \textbf{Trade-offs in closed-loop tasks}: The landing scenario (Section~\ref{subsec:landing}) revealed a trade-off between speed and reliability. This trade-off is likely to be a general feature of active-vision systems, where the need for rapid decision-making must be balanced against the need for accuracy.
+\end{itemize}
 
 Several extensions are left for future work:
 
 \begin{itemize}
-    \item Real-image support. A \texttt{NaturalImageTask} class loading images from common datasets (e.g., COCO~\citep{Lin2014}) would broaden applicability.
-    \item Bayesian models. Integrating an ideal-observer model~\citep{Najemnik2005} that computes the theoretically optimal fixation sequence would provide an upper-bound reference.
-  \item Eye-tracking integration. Adapters for loading human fixation data (e.g., from EyeLink recordings) would enable direct human-vs.-algorithm comparisons.
-  \item Improving real-time closed-loop interfaces. Currently, the library supports a simple synchronous loop; adding asynchronous or event-driven interfaces would allow more complex interactions with external systems.
-  \item Temporal dynamics. Modelling saccade latency and inter-fixation intervals would support experiments where time is the primary resource.
+    \item \textbf{Real-image support}. A \texttt{NaturalImageTask} class that loads images from common datasets (e.g., COCO~\parencite{Lin2014} or ImageNet) would broaden the applicability of \avb{} to more naturalistic scenes. This would allow researchers to study active vision in contexts that more closely resemble real-world environments.
+
+    \item \textbf{Bayesian models}. Integrating an ideal-observer model~\parencite{Najemnik2005} that computes the theoretically optimal fixation sequence would provide an upper-bound reference for comparing human and algorithmic performance. Such a model would help to quantify the gap between current algorithms and optimal behaviour.
+
+    \item \textbf{Eye-tracking integration}. Adapters for loading human fixation data (e.g., from EyeLink or Tobii recordings) would enable direct comparisons between human and algorithmic performance under identical stimulus conditions. This would be particularly valuable for validating computational models of active vision.
+
+    \item \textbf{Improving real-time closed-loop interfaces}. Currently, the library supports a simple synchronous loop; adding asynchronous or event-driven interfaces would allow more complex interactions with external systems (e.g., robotic platforms or virtual reality environments). This would enable studies of active vision in dynamic, real-world-like settings.
+
+    \item \textbf{Temporal dynamics}. Modelling saccade latency and inter-fixation intervals would support experiments where time is the primary resource, rather than a fixed fixation budget. This would allow researchers to study the temporal aspects of active vision, such as the trade-offs between speed and accuracy.
 \end{itemize}
 
-% ---------------------------------------------------------------
+While \avb{} addresses many of the challenges in active-vision research, some limitations remain. First, the library currently focuses on \textbf{visual-flow stimuli}, which may not capture the full complexity of natural scenes. Second, the provided models (\texttt{RandomSearchModel} and \texttt{SaliencySearchModel}) are relatively simple and may not reflect the sophistication of state-of-the-art active-vision systems. Finally, the library does not yet support multi-modal stimuli (e.g., combining visual and auditory inputs), which are increasingly important in real-world applications.
+
+% ===============================================================
+% CONCLUSION
+% ===============================================================
 \section{Conclusion}
 \label{sec:conclusion}
-% ---------------------------------------------------------------
+\avb{} is a lightweight, single-file Python library designed for the construction of controlled visual-flow stimuli in active-vision experiments. While it includes benchmarking utilities, its primary focus is on stimulus generation, making it a versatile tool for researchers in behavioural, neurophysiological, and computational vision. By providing a simple yet powerful interface for generating and manipulating visual stimuli, \avb{} lowers the barrier to entry for active-vision research and facilitates reproducible comparisons across studies.
 
-\avb{} should be used first as a stimulus-construction library for visual-flow-oriented experiments. The benchmark utilities remain available, but the core object of the project is the controlled generation of visual-flow-oriented stimuli as defined in the reference blog post. We have described \avb{} as a self-contained, single-file Python toolkit for benchmarking active vision systems. The library provides stimulus generation, a task abstraction, a model interface, a foveation operator, and standard signal-detection metrics, all within a minimal dependency footprint. We hope that \avb{} will lower the barrier to reproducible comparisons of active-vision algorithms across the neuroscience and computer-vision communities.
+The key contributions of this work are:
+\begin{itemize}
+    \item A \textbf{lightweight, single-file implementation} that is easy to integrate into existing workflows.
+    \item Support for \textbf{multiple 3D scenarios} (infinite plane, cylinder, perturbations) that capture important aspects of natural vision.
+    \item A \textbf{clean, extensible API} that separates stimulus generation from model implementation, allowing for flexible experimentation.
+    \item \textbf{Reproducible benchmarks} for comparing active-vision algorithms under controlled conditions.
+\end{itemize}
 
-% ---------------------------------------------------------------
-% Bibliography
-% ---------------------------------------------------------------
-\bibliographystyle{plainnat}
-\bibliography{ActiveVisionBenchmark}
+We hope that \avb{} will serve as a foundation for future research in active vision, both by providing a standardised tool for stimulus construction and by inspiring new approaches to the study of visual perception in dynamic, real-world-like environments. Future work will focus on extending the library to support more complex stimuli, integrating real-world data, and improving the closed-loop interfaces to enable more sophisticated experiments.
+
+% ===============================================================
+% BIBLIOGRAPHY
+% ===============================================================
+\printbibliography[title=References]
 
 \end{document}
