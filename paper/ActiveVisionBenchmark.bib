@@ -130,6 +130,39 @@
   url = {https://arc.aiaa.org/doi/10.2514/1.56598},
   urldate = {2024-03-25}
 }
+@inproceedings{Nunes2023,
+ abstract = {Event cameras asynchronously report brightness changes with a temporal resolution in the order of microseconds, which makes them inherently suitable to address problems that involve rapid motion perception, such as ventral landing and fast obstacle avoidance. These problems are typically addressed by estimating a single global time-to-contact (TTC) measure, which explicitly assumes that the surface/obstacle is planar and fronto-parallel. We relax this assumption by proposing an incremental event-based method to estimate the TTC that jointly estimates the (up-to scale) inverse depth and global motion using a single event camera. The proposed method is reliable and fast while asynchronously maintaining a TTC map (TTCM), which provides per-pixel TTC estimates. As a side product, the proposed method can also estimate per-event optical flow. We achieve state-of-the-art performances on TTC estimation in terms of accuracy and runtime per event while achieving competitive performance on optical flow estimation.},
+ author = {Nunes, Urbano Miguel and Perrinet, Laurent U and Ieng, Sio-Hoi},
+ bdsk-url-1 = {https://laurentperrinet.github.io/publication/nunes-23-iccv/},
+ booktitle = {International Conference on Computer Vision 2023 (ICCV2023)},
+ date = {2023-10-06},
+ grants = {anr-anr},
+ keywords = {event-based vision,neuromorphic hardware,time-to-contact},
+ title = {Time-to-Contact Map by Joint Estimation of Up-to-Scale Inverse Depth and Global Motion using a Single Event Camera},
+ doi = {10.1109/ICCV51070.2023.02162},
+ url = {https://laurentperrinet.github.io/publication/nunes-23-iccv/},
+ url_code = {https://github.com/neuromorphic-paris/ETTCM},
+ url_pdf = {https://openaccess.thecvf.com/content/ICCV2023/supplemental/Nunes_Time-to-Contact_Map_by_ICCV_2023_supplemental.pdf},
+ url_venue = {https://openaccess.thecvf.com/content/ICCV2023/html/Nunes_Time-to-Contact_Map_by_Joint_Estimation_of_Up-to-Scale_Inverse_Depth_and_ICCV_2023_paper.html},
+ year = {2023}
+}
+@article{Jeremie2025,
+  title = {Foveated {{Retinotopy Improves Classification}} and {{Localization}} in {{Convolutional Neural Networks}}},
+  author = {J{\'e}r{\'e}mie, Jean-Nicolas and Dauc{\'e}, Emmanuel and Perrinet, Laurent U.},
+  year = 2026,
+  month = jun,
+  journal = {Vision},
+  volume = {10},
+  number = {2},
+  pages = {17},
+  publisher = {Multidisciplinary Digital Publishing Institute},
+  issn = {2411-5150},
+  doi = {10.3390/vision10020017},
+  url = {https://www.mdpi.com/2411-5150/10/2/17},
+  preprint = {https://arxiv.org/abs/2402.15480},
+  keywords = {Convolutional Neural Networks, Foveated vision, Transfer learning, visual categorization},
+  abstract = {From falcons spotting prey to humans recognizing faces, the ability to rapidly process visual information depends on a foveated retinal organization that provides high-acuity central vision while preserving low-resolution peripheral vision. This organization is conserved along early visual pathways, yet remains under-explored in machine learning. Here, we examine the impact of embedding a foveated retinotopic transformation as a preprocessing layer on convolutional neural networks (CNNs) for image classification. By applying a log-polar mapping to off-the-shelf models and retraining them, we achieve comparable accuracy while improving robustness to scale and rotation. We demonstrate that this architecture is highly sensitive to shifts in the fixation point and that this sensitivity provides an effective proxy for defining saliency maps that facilitate object localization. Our results demonstrate that foveated retinotopy encodes prior geometric knowledge, providing a solution for visual searches and a meaningful classification robustness and localization trade-off. These findings provides a proof of concept in order to connect principles of biological vision with artificial networks, suggesting new, robust and efficient approaches for computer vision systems.}
+}
 
 @article{Bajcsy1988,
   author = {Bajcsy, R.},

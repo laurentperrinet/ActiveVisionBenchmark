@@ -122,7 +122,7 @@ Despite these foundational discoveries, the stimuli used in many modern experime
 
 Recently, some studies have introduced more ecological stimuli, such as natural images or videos. However, these approaches have a major drawback: their complexity makes it difficult to interpret neuronal responses in terms of low-level features, such as the presence of locally oriented edges or elementary motions. To overcome this limitation, many studies now adopt an intermediate strategy~\parencite{Rust2005}, designing parametric stimuli that approximate natural conditions while remaining controllable through ecologically relevant parameters, such as orientation, direction of motion, or texture of the presented objects.
 
-Despite these advances, the stimuli used often remain overly simplistic compared to the complexity of natural environments. Two major limitations persist. First, the three-dimensional nature of the visual world means that the visual system must enable an agent to navigate in a 3D environment. Neurons in the primate \MST{} area, for example, are known to encode large-field optic-flow patterns associated with self-motion, such as expansion and rotation~\parencite{DuffyWurtz1991}. Second, agent-environment interaction implies that the visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a closed sensorimotor loop that reflects the natural functioning of the visual system~\parencite{Bajcsy1988}. Although such systems exist, their use remains limited due to technical challenges related to experimental control, reproducibility, and software integration.
+Despite these advances, the stimuli used often remain overly simplistic compared to the complexity of natural environments. Two major limitations persist. First, the three-dimensional nature of the visual world means that the visual system must enable an agent to navigate in a 3D environment. Neurons in the primate \MST{} area, for example, are known to encode large-field optic-flow patterns associated with self-motion, such as expansion and rotation~\parencite{DuffyWurtz1991}. Second, agent-environment interaction implies that the visual system does not operate in isolation but within an active agent capable of acting on its environment. A visual stimulation system must therefore be modifiable in real time to create a closed sensorimotor loop that reflects the natural functioning of the visual system~\parencite{Bajcsy1988}. This will not only deepen our understanding of visual perception, but also highlight the practical importance of optic flow in everyday navigation, from avoiding obstacles to maintaining stability.  Although such systems exist, their use remains limited due to technical challenges related to experimental control, reproducibility, and software integration.
 
 Within this context, we introduce \avb{}, a Python library designed to bridge the gap between classical parametric stimuli and more ecological active-vision paradigms. The library focuses on the reproducible construction of visual-flow stimuli while providing a minimal benchmarking interface for comparing search policies under a common energy budget. Its single-file design and minimal dependencies are intended to facilitate adoption into existing behavioural, neurophysiological, and computational pipelines.
 
@@ -169,10 +169,10 @@ Active vision---the paradigm in which a perceiving agent controls its own sensor
 % ---------------------------------------------------------------
 \subsection{Architecture Overview}
 % ---------------------------------------------------------------
-\avb{} is available online at the \href{https://github.com/laurentperrinet/ActiveVisionBenchmark}{\color{blue}\underline{GitHub repository}} and is released under the GPLv3 licence. The library is organised around three conceptual layers, all contained within the single file \texttt{ActiveVisionBenchmark.py}:
+\avb{} is available online at its \href{https://github.com/laurentperrinet/ActiveVisionBenchmark}{\color{blue}\underline{GitHub repository}} and is released under the GPLv3 licence. The library is organised around three conceptual layers, all contained within the single file \texttt{ActiveVisionBenchmark.py}:
 
 \begin{enumerate}
-  \item Stimulus layer. Functions that generate synthetic visual stimuli, such as regular grids, Motion Clouds~\parencite{SanzLeon2012,PortillaSimoncelli2000}, or user-defined textures~\parencite{Wandell1995}.
+  \item Stimulus layer. Functions that generate synthetic visual stimuli.
 
   \item Task layer. Projection of the texture defined in the Stimulus layer into 3D scene geometries (e.g., infinite plane or cylinder). It yields a definition of the stimulation protocol and the interface for active-vision models, including the \texttt{generate\_dataset} method that produces a list of trials.
 
@@ -184,47 +184,61 @@ Active vision---the paradigm in which a perceiving agent controls its own sensor
 % ---------------------------------------------------------------
 The stimulus layer defines the input image that is projected into the 3D scenarios. This image can be:
 \begin{itemize}
-    \item A regular grid or Gaussian noise for baseline experiments.
-    \item A Motion Clouds pattern, which provides a parametric way to generate natural-like textures with controlled statistical properties~\parencite{SanzLeon2012,PortillaSimoncelli2000}.
+    \item A regular grid for baseline experiments and control displays.
+    \item Procedural textures based on edge  statistics~\parencite{PortillaSimoncelli2000} or user-defined textures~\parencite{Wandell1995}. Typically, we use Motion Clouds patterns, which provides a parametric way to generate natural-like textures with controlled statistical properties~\parencite{SanzLeon2012}.
     \item Any user-defined texture image, such as natural images loaded from datasets like COCO~\parencite{Lin2014}.
 \end{itemize}
 
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=\linewidth]{fig_scenario}
-  \caption{%
-    Schematic of the two primary benchmark scenario types rendered from a pinhole camera
-    centred at $F_c$ with focal length $f$.
-    The green ground plane ($z=0$) represents the flat-scene scenario
-    (e.g., navigation over a textured surface).
-    The red cylinder represents the 3D object scenario (e.g., a confined
-    corridor), in which the agent must localise a volumetric object at polar coordinates
-    $P=(R\cos\theta,\,R\sin\theta,\,Z)$.
-    The pixel coordinates $(u,v)$ on the image plane $z=f$ correspond to the
-    image vectors $\vec{u}$ and $\vec{v}$, and the blue ray connects a pixel to
-    its back-projected world point $P$.
-  }
-  \label{fig:scenario}
+ \centering
+ \includegraphics[width=\linewidth]{fig_scenario}
+ \caption{%
+ Schematic of the two primary benchmark scenario types rendered from a pinhole camera centred at $F_c$ with focal length $f$.  The green ground plane ($z=0$) represents the flat-scene scenario (e.g., navigation over a textured surface). The red cylinder represents the 3D object scenario (e.g., a confined corridor), in which the agent must localise a volumetric object at polar coordinates $P=(R\cos\theta,\,R\sin\theta,\,Z)$. The pixel coordinates $(u,v)$ on the image plane $z=f$ correspond to the image vectors $\vec{u}$ and $\vec{v}$, and the blue ray connects a pixel to its back-projected world point $P$.
+ }
+ \label{fig:scenario}
 \end{figure}
 
 % ---------------------------------------------------------------
 \subsection{ActiveVisionModel Layer}
 % ---------------------------------------------------------------
 
-The abstract base class \texttt{ActiveVisionModel} defines two projection methods~\ref{fig:scenario}
+To create natural and immersive optic flow, we project texture images onto geometric surfaces such as a plane or a cylinder. The planar configuration simulates navigation over a flat surface, while the cylindrical configuration simulates movement through a tunnel-like environment. In both cases, optic flow is generated by simulating the agent's movement within the environment, where the texture's perspective and motion dynamics replicate real-world visual cues. This approach enhances ecological validity by providing continuous and coherent visual fields that evoke authentic self-motion perception.
 
+The texture is mapped onto the inner surface of the cylinder or the plane (see Figure~\ref{fig:scenario}). For the mapping process, we define two axes: the first represents the angular direction of each pixel with respect to the horizontal axis perpendicular to the optical axis, while the second corresponds to depth and is repeated periodically with period $P$. Using a pinhole camera model centered at $F_C$, we define pixel coordinates $u$ and $v$ as the azimuth and elevation, respectively.
+
+For the angular direction, the relative angle $\theta$ of each pixel is computed as:
+%
+\begin{equation}
+\theta = \arctan\frac{v}{u}.
+\end{equation}
+%
+To estimate depth on the cylinder surface, we calculate the deviation $\phi$ from the optical axis. Given the cylinder radius $R$ and the depth $Z$ of a pixel, this deviation satisfies:
+%
+\begin{equation}
+\tan \phi = \frac{R}{Z}.
+\end{equation}
+%
+In general, $\phi$ is defined as the great-circle distance, transforming azimuth and elevation into an angular deviation from the gaze axis. For small angles, we use the approximation $\phi \approx \sqrt{u^2 + v^2}$, which yields a depth of $\frac{R}{\tan \phi}$ for each pixel. Since the texture is periodic with period $P$, we use modulo operations to select the appropriate texture region. Note that the cylinder can be scaled in both $P$ and $R$ without changing the visual result; to simplify, we fix $R=1$ in arbitrary units. Additionally, we may add a circular mask to avoid border effects. 
+
+Additionally, a natural depth effect is that luminance decreases in inverse proportion to the distance from the camera. From the conservation law for the luminous energy (which travels straight in an Euclidian space here), the luminance of a luminous source falls off as inversely proportional to the square of the distance. , which is implemented by multiplying the texture by a factor of $\frac{1}{Z}$,  that is, we might modulate the intensity of any pixel inversely proportionnally to its distance.
+
+These geometric projections are implemented in the \texttt{CylinderTask} class, which inherits from the abstract base class \texttt{ActiveVisionModel}. The \texttt{CylinderTask} class defines the cylinder geometry and provides methods to project textures onto its surface, generating image sequences that simulate an agent's movement through the environment. This allows for the evaluation of active-vision models under controlled, reproducible conditions. 
+
+The \texttt{ActiveVisionModel} class defines a unified interface for projection tasks, supporting two primary scenarios (illustrated in Figure~\ref{fig:scenario}):
+%
 \begin{description}
-  \item A navaigation task over an horizontal plane, where the agent must localise a target on a textured surface. 
-  \item A navigation task within a cylindrical corridor, where the agent must maintain fixation (the optical axis) along the cylinder's axis.
+  \item[Horizontal plane navigation:] The agent must localise a target on a textured surface, with optic flow generated by planar projection.
+  \item[Cylindrical corridor navigation:] The agent must maintain fixation (optical axis) along the cylinder's central axis, with optic flow generated by cylindrical projection.
 \end{description}
 
-The \texttt{ActiveVisionModel Layer} wraps the stimulus layer to provide a reproducible stream of \texttt{Trial} objects. Each trial includes:
+% COMMENTAIRE: Description de la génération des essais
+The \texttt{ActiveVisionModel} layer wraps the stimulus layer to provide a reproducible stream of \texttt{Trial} objects. Each trial includes:
 \begin{itemize}
     \item A \texttt{target\_present} flag indicating whether the target is present in the scene.
     \item The ground-truth \texttt{target\_location} (if applicable).
     \item A \texttt{seed} for reproducibility.
 \end{itemize}
-The \texttt{generate\_dataset} method produces a list of $N$ trials, enabling batch evaluation.
+The \texttt{generate\_dataset} method produces a list of $N$ trials, enabling batch evaluation under consistent conditions.
 
 % ---------------------------------------------------------------
 \subsection{Metrics}
@@ -249,8 +263,6 @@ Accuracy                    & $A$             & $(\text{hits} + \text{correct re
 Hit rate                    & $H$             & $\text{hits} / N_+$ \\
 False alarm rate            & $F$             & $\text{false alarms} / N_-$ \\
 Sensitivity (d-prime)       & \dprime         & $z(H) - z(F)$ \\
-Mean fixations              & $\bar{k}$      & Average fixations per trial \\
-Search efficiency          & $\eta$          & $\bar{k}_\text{random} / \bar{k}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -274,25 +286,27 @@ From an evaluation perspective, the infinite-plane setup serves as the baseline 
 We generated $200$ trials using \texttt{HorizontalPlaneTask} with the following parameters:
 \begin{itemize}
     \item Image size: $256 \times 256$ pixels.
-    \item Number of distractors per trial: $10$.
-    \item Target-present probability: $0.5$.
-    \item Fixation budget per trial: $20$ fixations.
     \item Fixed seeds for reproducibility.
-    \item Texture: Gaussian noise with a spatial frequency bandwidth of $0.1$ cycles/pixel.
+    \item Texture: Band-passed Gaussian noise with a spatial frequency bandwidth of $0.1$ cycles/pixel.
 \end{itemize}
 
 \begin{lstlisting}[caption={Reproducing the benchmark comparison for the infinite-plane scenario.}, label={lst:example_plane}]
 import numpy as np
-from ActiveVisionBenchmark import (
-    Benchmark, RandomSearchModel, SaliencySearchModel, HorizontalPlaneTask
-)
+import MotionClouds as mc
+from ActiveVisionBenchmark import  Benchmark, HorizontalPlaneTask
+
+import MotionClouds as mc
+fx, fy, ft = mc.get_grids(256, 256, 1)
+env = mc.envelope_gabor(fx, fy, ft, B_theta=np.inf)
+image = mc.random_cloud(env, seed=42)
+image = mc.rectif(image)
 
 # Initialise the task and benchmark
-task = HorizontalPlaneTask(image_size=(256, 256), seed=0)
-bench = Benchmark()
+task = HorizontalPlaneTask(image, seed=42)
+bench = Benchmark(task)
 
 # Generate a dataset of 200 trials
-trials = task.generate_dataset(n_trials=200)
+trials = bench.generate_dataset(n_trials=200)
 
 # Run the benchmark and print results
 results = bench.evaluate(trials)
@@ -302,15 +316,19 @@ for name, res in results.items():
 
 The results summarise the performance of models in both accuracy and sensitivity compared to the ground truth, allowing quantitative evaluation of the model at the neurophysiological, behavioural or theoretical levels.
 
-\begin{figure}[htbp]
+\begin{figure}%[htbp]
   \centering
-%   \includegraphics[width=\linewidth]{fig_example_stimuli}
+  \includegraphics[width=0.48\linewidth]{grid_rect.png}
+  \hfill
+  \includegraphics[width=0.48\linewidth]{grid_cylinder.png} \\
+  \vspace*{.5cm}
+  \includegraphics[width=0.48\linewidth]{texture_rect.png}
+  \hfill
+  \includegraphics[width=0.48\linewidth]{texture_cylinder.png}
+  
   \caption{%
-    Example stimuli for different scenarios (middle and right columns) and different texture images (rows).
-    The left column shows the original texture images used as input.
-    The middle column shows the projected stimuli for the infinite-plane scenario, while the right column shows the projected stimuli for the cylindrical scenario.
-    Each row corresponds to a different texture type: (A) Gaussian noise, (B) Motion Clouds, and (C) a natural image from the COCO dataset.
-    The projected stimuli illustrate how the same texture can produce different optic-flow patterns depending on the 3D geometry of the scene.
+    Example stimuli for the cylinder scenario and different images (rows). The left column shows the original images used as input.
+    Each row corresponds to a different image type: a grid and a Motion Clouds texture. The right column shows the projected stimuli for the cylindrical scenario. The projected stimuli illustrate how the same texture can produce different optic-flow patterns depending on the 3D geometry of the scene.
   }
   \label{fig:example_stimuli}
 \end{figure}
@@ -333,7 +351,7 @@ Model predictions will then be tested in vivo using Neuropixels recordings, calc
 
 In this context, \avb{} provides a flexible and reproducible framework for introducing controlled perturbations in visual-flow stimuli. By systematically varying the timing, amplitude, and direction of the angular deflection, researchers can probe how neural circuits in the visual cortex adapt to mismatches between predicted and actual sensory input. This capability is particularly valuable for studying the dynamic modulation of cortical computations by neuromodulatory systems, as it allows for precise control over the sensory evidence while maintaining ecological validity.
 
-\begin{figure}[htbp]
+\begin{figure}%[htbp]
   \centering
   \includegraphics[width=0.52\linewidth]{rancz_setup.jpeg}
   \hfill
@@ -364,16 +382,28 @@ To close the sensorimotor loop, we defined a landing task in which the agent mus
     \item Time-to-land: The number of control steps required to satisfy the consecutive-success criterion.
 \end{itemize}
 
-\begin{figure}[htbp]
+Landing using time-to-contact and ventral optic flow estimates is a well-studied problem in both biological and robotic systems. In biological vision, time-to-contact estimation from optic flow is a fundamental mechanism for guiding actions such as landing, grasping, or collision avoidance~\parencite{Izzo2012}. This capability has also been leveraged in robotics, where optic flow-based control strategies enable drones to perform autonomous landings with high precision, even in dynamic environments~\parencite{Izzo2012}. Recent advances in neuromorphic engineering have further demonstrated that event-based cameras can efficiently compute time-to-contact from sparse, asynchronous visual data, offering robust solutions for real-time applications in challenging lighting conditions~\parencite{Nunes2023}.
+
+
+\begin{figure}%[htbp]
   \centering
-%   \includegraphics[width=0.8\linewidth]{fig_landing_results}
+  \includegraphics[width=0.465\linewidth]{landing_events.png}
+  \hfill
+  \includegraphics[width=0.48\linewidth]{landing_flow.png}
   \caption{%
-    Landing task performance.
-    (A) Success rate, (B) Time-to-land (steps).
-    Error bars represent $\pm 1$ SEM across episodes.
+    Experimental results from a closed-loop landing task using ventral optic flow. We show the data acquired from a single trial of a drone navigating indoors in a landing scenario. The left panel displays the raw pixels event data, either with ON pixels (white) or OFF pixels (black). The right panel shows the corresponding ventral optic flow field at a specific time point during the descent, illustrating how the flow vectors converge toward the target zone~\parencite{Nunes2023}. This closed-loop control strategy allows for real-time adjustments to maintain a stable touchdown condition. This illustrates the importance and difficulty of designing neuromorphic involving closed-loop control and the use of synthetic benchmarks such as \avb{}. 
   }
-  \label{fig:landing_results}
+  \label{fig:landing}
 \end{figure}
+
+In our experiments, we implemented a simple landing policy based on ventral optic flow, computed from the visual input projected onto the ground plane (see Figure~\ref{fig:landing}). The agent adjusts its descent rate based on the magnitude of the optic flow, aiming to maintain a constant time-to-contact with the target zone. This closed-loop control strategy allows us to evaluate how well different active-vision models can exploit visual-flow information to achieve a successful landing. More broadly, \avb{} provides a flexible framework for studying such sensorimotor tasks by enabling researchers to:
+\begin{itemize}
+    \item Generate controlled, reproducible optic-flow patterns that mimic natural landing conditions.
+    \item Systematically vary parameters such as texture, speed, and perturbation to probe the robustness of landing strategies.
+    \item Compare biological and algorithmic performance under identical stimulus conditions, bridging the gap between neuroscience and robotics.
+\end{itemize}
+This capability is particularly valuable for translating biological insights into robotic applications and for validating computational models of active vision in ecologically relevant scenarios.
+
 
 % ===============================================================
 % DISCUSSION
@@ -397,7 +427,7 @@ Several extensions are left for future work:
 \begin{itemize}
     \item \textbf{Real-image support}. A \texttt{NaturalImageTask} class that loads images from common datasets (e.g., COCO~\parencite{Lin2014} or ImageNet) would broaden the applicability of \avb{} to more naturalistic scenes. This would allow researchers to study active vision in contexts that more closely resemble real-world environments.
 
-    \item \textbf{Optic flow models}. From the way we generate optic flow fields, a foveated retinotthat computes the theoretically optimal fixation sequence would provide an upper-bound reference for comparing human and algorithmic performance. Such a model would help to quantify the gap between current algorithms and optimal behaviour.
+    \item \textbf{Optic flow models}. From the way we generate optic flow fields, a foveated retinotopy mapping of the image seem to rencode the image in an optimal way~\parencite{Jeremie2025}. Such a model would help to quantify the gap between current algorithms and optimal behaviour.
 
     \item \textbf{Eye-tracking integration}. Adapters for loading human fixation data (e.g., from EyeLink or Tobii recordings) would enable direct comparisons between human and algorithmic performance under identical stimulus conditions. This would be particularly valuable for validating computational models of active vision.
 
