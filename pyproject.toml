@@ -3,13 +3,13 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ActiveVisionBenchmark"
-version = "0.1.0"
-description = "A lightweight, single-file toolkit for visual-flow stimulus construction in active vision"
+name = "avb"
+version = "0.2.0"
+description = "A lightweight, single-file toolkit to benchmark active vision with controlled visual-flow stimuli"
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
 authors = [{ name = "Laurent Perrinet", email = "laurent.perrinet@univ-amu.fr" }]
-keywords = ["active vision", "visual stimulus", "visual flow", "optic flow", "orientation"]
+keywords = ["active vision", "visual stimulus", "visual flow", "optic flow", "benchmark", "sensorimotor loop"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -19,15 +19,20 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Image Processing",
 ]
 requires-python = ">=3.9"
-dependencies = ["numpy>=1.21"]
+# The library is a single file; these are the only mandatory dependencies.
+dependencies = ["numpy>=1.24", "torch>=2.0", "torchvision>=0.15"]
 
 [project.optional-dependencies]
-full = ["scipy>=1.7", "matplotlib>=3.4"]
-dev  = ["pytest>=7", "scipy>=1.7", "matplotlib>=3.4"]
+# Texture generator of the Motion Clouds package (a built-in generator is the fallback).
+motionclouds = ["MotionClouds"]
+# Plots, video export, the notebooks of the paper.
+full = ["matplotlib>=3.5", "imageio>=2.9", "imageio-ffmpeg", "jupyterlab", "MotionClouds"]
 
 [project.urls]
 Homepage   = "https://github.com/laurentperrinet/ActiveVisionBenchmark"
@@ -35,4 +40,5 @@ Repository = "https://github.com/laurentperrinet/ActiveVisionBenchmark"
 Issues     = "https://github.com/laurentperrinet/ActiveVisionBenchmark/issues"
 
 [tool.setuptools]
+# A single module at the root of the repository: no package folder is needed.
 py-modules = ["ActiveVisionBenchmark"]

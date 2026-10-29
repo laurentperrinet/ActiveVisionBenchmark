@@ -26,6 +26,9 @@ coverage.xml
 ## Jupyter Notebooks
 .ipynb_checkpoints/
 
+## Cache of the long computations (see avb.cached)
+cache/
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof

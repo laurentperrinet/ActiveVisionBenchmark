@@ -1,0 +1,14 @@
+# Documentation build dependencies for ActiveVisionBenchmark.
+# Install with: pip install -r docs/requirements.txt
+sphinx>=7.0
+furo
+nbsphinx
+myst-parser
+ipykernel
+# runtime dependencies needed to import the module for autodoc
+# (the CI installs the CPU-only build of torch and torchvision beforehand)
+numpy>=1.24
+torch>=2.0
+torchvision>=0.15
+matplotlib>=3.5
+imageio>=2.9
