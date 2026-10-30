@@ -55,13 +55,28 @@ and the irradiance of a Lambertian surface falls as :math:`1/d^2`, hence :math:`
 hits the ground at :math:`t = H / (-d_y)` and the texture is sampled at the position
 :math:`(X, Z) \\bmod P` of that point.
 
-*Perturbation* (exogenous, in degrees or in m/s): a slow Langevin diffusion (always
-present), in which a hidden drive :math:`y` relaxes under a white random force
-:math:`w` and is integrated by a damped signal :math:`x`,
+*Perturbation* (exogenous, in degrees or in m/s): a slow, damped diffusion of the target
+(an Ornstein-Uhlenbeck process, always present), in which a hidden drive :math:`y` relaxes
+under a white random force :math:`w` and is integrated by a damped signal :math:`x`,
 
 .. math:: \\tau\\,\\dot y = -y + w(t), \\qquad \\tau\\,\\dot x = y - x,
 
-whose stationary standard deviation is :math:`\\sigma_\\mathrm{OU}`, plus abrupt Gaussian
+whose stationary standard deviation is :math:`\\sigma_\\mathrm{OU}`. The parameters give
+its statistics a priori. The drive :math:`y` is an Ornstein-Uhlenbeck process with the
+autocorrelation :math:`e^{-|\\Delta t|/\\tau}`; the signal :math:`x`, which filters it, has
+the marginal distribution of its deviations
+
+.. math:: x \\sim \\mathcal N(0, \\sigma_\\mathrm{OU}^2),
+
+and the autocorrelation
+
+.. math:: C(\\Delta t) = \\sigma_\\mathrm{OU}^2\\,\\left(1 + \\frac{|\\Delta t|}{\\tau}\\right)
+          e^{-|\\Delta t|/\\tau},
+
+so that :math:`\\tau` is the time constant of the decay of the correlation (the correlation
+time, :math:`\\int_0^\\infty C/C(0)\\,d\\Delta t = 2\\tau`). The process is smooth: it is
+differentiable, with a velocity of standard deviation :math:`\\sigma_\\mathrm{OU}/\\tau`.
+The perturbation adds abrupt Gaussian
 jumps of standard deviation :math:`\\sigma_\\mathrm{jump}` that arrive with a hazard rate
 :math:`\\lambda` (only in the perturbation benchmarks).
 
@@ -2824,12 +2839,14 @@ def _annotate(
     return image
 
 
-def _legend(width: int, height: int = 18) -> np.ndarray:
-    """Strip that explains the dot and the circle of the overlays."""
+def _legend(width: int, height: int = 18, estimate: bool = True) -> np.ndarray:
+    """Strip that explains the dot and (with *estimate*) the circle of the overlays."""
     strip = np.zeros((height, width, 3))
-    left = max(4, (width - 200) // 2)
+    left = max(4, (width - (200 if estimate else 70)) // 2)
     strip = draw_marker(strip, height / 2, left + 5, radius=3.0, colour=TARGET_COLOUR)
     strip = draw_text(strip, "true FoE", (left + 14, height / 2), "lt", size=11)
+    if not estimate:
+        return strip
     strip = draw_marker(strip, height / 2, left + 95, radius=5.5, colour=ESTIMATE_COLOUR, ring=True)
     return draw_text(strip, "estimated FoE", (left + 105, height / 2), "lt", size=11)
 
@@ -2851,6 +2868,7 @@ def passive_video(
     ncols: Optional[int] = None,
     fps: int = 30,
     crf: int = 28,
+    show_estimate: bool = True,
 ) -> str:
     """Write the video of passive streams, one panel per task, side by side.
 
@@ -2872,13 +2890,15 @@ def passive_video(
         seed: Seed of the trials: each task plays ``task.generate_trial(seed)``.
         heading_offset: Mean heading minus the gaze (deg) that replaces the one of the
             trial: a number for every panel, or a dictionary keyed like ``tasks``.
-        show_foe: If ``True``, draw the true FoE and its estimate.
+        show_foe: If ``True``, draw the true FoE (a dot) and its estimate (a circle).
         models: Models that estimate the FoE, keyed like ``tasks`` (by default,
             :class:`FlowHeadingModel`, with the fit of the yaw for a tunnel). Only the
             ``heading_estimate`` of their action is used.
         ncols: Number of columns of the grid of panels. Defaults to one row.
         fps: Frames per second of the video.
         crf: Constant rate factor of the encoder, see :func:`save_video`.
+        show_estimate: If ``False``, draw only the dot of the true FoE with ``show_foe``
+            (no model is run).
 
     Returns:
         The path of the video.
@@ -2897,7 +2917,7 @@ def passive_video(
         if offset is not None:
             trial = dataclasses.replace(trial, heading_offset=float(offset))
         model = None
-        if show_foe:
+        if show_foe and show_estimate:
             model = _per_panel(models, label) or _foe_estimator(task)
             model.reset(trial.seed)
         obs = task.reset(trial, closed_loop=False)
@@ -2918,7 +2938,7 @@ def passive_video(
         for images in zip(*panels):
             image = tile(list(images), ncols)
             if show_foe and legend is None:
-                legend = _to_uint8(_legend(image.shape[1]))
+                legend = _to_uint8(_legend(image.shape[1], estimate=show_estimate))
             yield image if legend is None else np.vstack([image, legend])
 
     return save_video(grid(), name, directory, fps=fps, crf=crf)

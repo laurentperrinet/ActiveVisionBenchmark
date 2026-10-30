@@ -20,12 +20,12 @@ controlled by a model that closes the sensorimotor loop).
 
 ## The three benchmarks
 
-1. **Navigation** (plane and cylinder). The observer estimates the direction of its
+1. **Navigation** (plane and cylinder; see {doc}`notebooks/02_navigation_plane_cylinder`). The observer estimates the direction of its
    egomotion (plane), or keeps its gaze on the axis of a tunnel (cylinder), while the target
    (the focus of expansion, FoE) diffuses slowly.
-2. **Perturbation**. Abrupt exogenous jumps of the FoE (a hazard rate and a Gaussian
+2. **Perturbation** (see {doc}`notebooks/03_perturbation`). Abrupt exogenous jumps of the FoE (a hazard rate and a Gaussian
    amplitude) are added.
-3. **Landing**. The camera descends onto the ground plane and has to touch it as fast and
+3. **Landing** (see {doc}`notebooks/04_landing`). The camera descends onto the ground plane and has to touch it as fast and
    as softly as possible.
 
 ## Where to go next
